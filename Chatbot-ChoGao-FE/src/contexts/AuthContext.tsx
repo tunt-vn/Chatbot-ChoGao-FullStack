@@ -22,17 +22,21 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
 
   // Check if user is already logged in on mount
   useEffect(() => {
-    const checkAuth = () => {
+    const checkAuth = async () => {
       const token = localStorage.getItem('authToken')
       if (token) {
-        // In a real app, you'd verify the token with the backend
-        // For now, we'll just set a placeholder user
-        setUser({
-          id: '',
-          email: '',
-          name: '',
-          role: 'USER',
-        })
+        try {
+          // Lấy thông tin user từ localStorage nếu có
+          const savedUser = localStorage.getItem('user')
+          if (savedUser) {
+            setUser(JSON.parse(savedUser))
+          }
+        } catch (err) {
+          console.error('Failed to load user:', err)
+          // Clear invalid data
+          localStorage.removeItem('authToken')
+          localStorage.removeItem('user')
+        }
       }
       setLoading(false)
     }
@@ -45,12 +49,15 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null)
     try {
       const response = await authApi.login(email, password)
-      setUser({
+      const userData = {
         id: response.user.id.toString(),
         email: response.user.email,
         name: response.user.name,
         role: response.user.role,
-      })
+      }
+      setUser(userData)
+      // Lưu user info vào localStorage
+      localStorage.setItem('user', JSON.stringify(userData))
     } catch (err: any) {
       const errorMessage = err.message || 'Đăng nhập thất bại. Vui lòng thử lại.'
       setError(errorMessage)
@@ -65,8 +72,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     setError(null)
     try {
       await authApi.register(email, password, name)
-      // Auto login after registration
-      await login(email, password)
+      // Không auto login sau khi đăng ký vì cần verify email
+      // await login(email, password)
     } catch (err: any) {
       const errorMessage = err.message || 'Đăng ký thất bại. Vui lòng thử lại.'
       setError(errorMessage)
@@ -80,6 +87,8 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     authApi.logout()
     setUser(null)
     setError(null)
+    // Xóa user info khỏi localStorage
+    localStorage.removeItem('user')
   }
 
   const value: AuthContextType = {
