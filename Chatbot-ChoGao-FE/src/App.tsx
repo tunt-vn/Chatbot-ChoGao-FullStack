@@ -10,6 +10,8 @@ import ChatWindow from './components/ChatWindow'
 import FAQ from './pages/FAQ'
 import Schedule from './pages/Schedule'
 import Admin from './pages/Admin'
+import UserManagement from './pages/UserManagement'
+import QAManagement from './pages/QAManagement'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -49,6 +51,22 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/users"
+                element={
+                  <ProtectedRoute>
+                    <UserManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/qa"
+                element={
+                  <ProtectedRoute>
+                    <QAManagement />
                   </ProtectedRoute>
                 }
               />
