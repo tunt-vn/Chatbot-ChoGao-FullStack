@@ -298,19 +298,31 @@ export default function QAManagement() {
   return (
     <Stack spacing={3}>
       {/* Header */}
-      <Box>
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ xs: 'flex-start', sm: 'center' }} justifyContent="space-between" mb={3}>
         <Button
-          variant="text"
+          variant="outlined"
           onClick={() => navigate('/admin')}
-          sx={{ mb: 2, color: 'text.secondary' }}
+          startIcon={<Box component="span" sx={{ fontSize: '1.2em' }}>←</Box>}
+          sx={{ 
+            borderColor: 'primary.main',
+            color: 'primary.main',
+            '&:hover': {
+              bgcolor: 'primary.50',
+              borderColor: 'primary.600'
+            }
+          }}
         >
-          ← Quay lại bảng điều khiển
+          Quay lại bảng điều khiển
         </Button>
+        
         <Chip
           icon={<QuizIcon />}
           label="Hệ thống hỗ trợ"
-          sx={{ bgcolor: 'rgba(255,152,0,0.08)', color: 'warning.main', mb: 2 }}
+          sx={{ bgcolor: 'rgba(255,152,0,0.08)', color: 'warning.main' }}
         />
+      </Stack>
+      
+      <Box>
         <Typography variant="h4" gutterBottom>
           Quản lý Q&A
         </Typography>

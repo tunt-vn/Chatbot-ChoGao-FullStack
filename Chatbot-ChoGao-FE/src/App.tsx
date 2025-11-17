@@ -12,6 +12,8 @@ import Schedule from './pages/Schedule'
 import Admin from './pages/Admin'
 import UserManagement from './pages/UserManagement'
 import QAManagement from './pages/QAManagement'
+import NotificationManagement from './pages/NotificationManagement'
+import ActivityLogs from './pages/ActivityLogs'
 import Profile from './pages/Profile'
 import Login from './pages/Login'
 import Register from './pages/Register'
@@ -67,6 +69,22 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <QAManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/notifications"
+                element={
+                  <ProtectedRoute>
+                    <NotificationManagement />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/activity-logs"
+                element={
+                  <ProtectedRoute>
+                    <ActivityLogs />
                   </ProtectedRoute>
                 }
               />

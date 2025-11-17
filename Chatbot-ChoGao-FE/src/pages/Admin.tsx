@@ -2,9 +2,10 @@ import { Box, Grid, Paper, Stack, Typography, Chip, Button } from '@mui/material
 import { useNavigate } from 'react-router-dom'
 import DashboardIcon from '@mui/icons-material/esm/Dashboard'
 import AnalyticsIcon from '@mui/icons-material/esm/Analytics'
-import SettingsIcon from '@mui/icons-material/esm/SettingsApplications'
 import PeopleIcon from '@mui/icons-material/esm/People'
 import QuizIcon from '@mui/icons-material/esm/Quiz'
+import NotificationsIcon from '@mui/icons-material/esm/Notifications'
+import HistoryIcon from '@mui/icons-material/esm/History'
 
 export default function Admin() {
   const navigate = useNavigate()
@@ -14,13 +15,6 @@ export default function Admin() {
       icon: <AnalyticsIcon color="primary" />,
       title: 'Báo cáo & Thống kê',
       description: 'Phân tích mức độ sử dụng, lượt câu hỏi phổ biến và chất lượng phản hồi của trợ lý.',
-      action: () => console.log('Coming soon'),
-      buttonText: 'Khám phá thêm'
-    },
-    {
-      icon: <SettingsIcon color="secondary" />,
-      title: 'Quản lý nội dung',
-      description: 'Điều chỉnh, cập nhật FAQ, kịch bản hội thoại và thiết lập chính sách trả lời.',
       action: () => console.log('Coming soon'),
       buttonText: 'Khám phá thêm'
     },
@@ -37,6 +31,20 @@ export default function Admin() {
       description: 'Quản lý câu hỏi thường gặp, câu trả lời và cập nhật cơ sở tri thức của hệ thống.',
       action: () => navigate('/admin/qa'),
       buttonText: 'Quản lý ngay'
+    },
+    {
+      icon: <NotificationsIcon color="info" />,
+      title: 'Quản lý thông báo',
+      description: 'Tạo, gửi và quản lý thông báo hệ thống tới người dùng về các sự kiện quan trọng.',
+      action: () => navigate('/admin/notifications'),
+      buttonText: 'Quản lý ngay'
+    },
+    {
+      icon: <HistoryIcon color="inherit" />,
+      title: 'Nhật ký hoạt động',
+      description: 'Theo dõi và kiểm soát tất cả hoạt động của người dùng trong hệ thống.',
+      action: () => navigate('/admin/activity-logs'),
+      buttonText: 'Xem nhật ký'
     }
   ]
 
@@ -58,7 +66,7 @@ export default function Admin() {
 
       <Grid container spacing={3}>
         {adminCards.map((card) => (
-          <Grid key={card.title} item xs={12} md={6}>
+          <Grid key={card.title} item xs={12} sm={6} md={6} lg={4}>
             <Paper
               sx={{
                 p: 3,
