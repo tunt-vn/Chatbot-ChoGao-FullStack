@@ -35,7 +35,6 @@ import {
   Accordion,
   AccordionSummary,
   AccordionDetails,
-  Divider,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -46,7 +45,6 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import HistoryIcon from '@mui/icons-material/esm/History'
 import SearchIcon from '@mui/icons-material/esm/Search'
-import FilterListIcon from '@mui/icons-material/esm/FilterList'
 import DownloadIcon from '@mui/icons-material/esm/Download'
 import RefreshIcon from '@mui/icons-material/esm/Refresh'
 import PersonIcon from '@mui/icons-material/esm/Person'
@@ -55,7 +53,6 @@ import LogoutIcon from '@mui/icons-material/esm/Logout'
 import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
 import AddIcon from '@mui/icons-material/esm/Add'
-import SecurityIcon from '@mui/icons-material/esm/Security'
 import ExpandMoreIcon from '@mui/icons-material/esm/ExpandMore'
 import ErrorIcon from '@mui/icons-material/esm/Error'
 import WarningIcon from '@mui/icons-material/esm/Warning'
@@ -63,13 +60,15 @@ import InfoIcon from '@mui/icons-material/esm/Info'
 import VisibilityIcon from '@mui/icons-material/esm/Visibility'
 import { useNavigate } from 'react-router-dom'
 import { vi } from 'date-fns/locale'
+import type { Role } from '../types/roles'
+import { RoleLabels, RoleColors } from '../types/roles'
 
 interface ActivityLog {
   id: string
   timestamp: string
   userId: string
   userName: string
-  userRole: string
+  userRole: Role | 'system'  // Allow system role for system processes
   action: string
   resource: string
   details: string
@@ -87,7 +86,7 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T14:30:00Z',
     userId: 'usr001',
     userName: 'Nguyễn Văn An',
-    userRole: 'admin',
+    userRole: 'ADMIN',
     action: 'CREATE_NOTIFICATION',
     resource: 'notification/123',
     details: 'Tạo thông báo "Thông báo nghỉ lễ Quốc khánh 2/9"',
@@ -102,7 +101,7 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T14:25:00Z',
     userId: 'usr002',
     userName: 'Trần Thị Bình',
-    userRole: 'moderator',
+    userRole: 'STAFF',
     action: 'UPDATE_QA',
     resource: 'qa/456',
     details: 'Cập nhật Q&A "Làm thế nào để đăng ký môn học mới?"',
@@ -117,7 +116,7 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T14:20:00Z',
     userId: 'usr003',
     userName: 'Lê Hoàng Cường',
-    userRole: 'user',
+    userRole: 'MEMBER',
     action: 'LOGIN',
     resource: 'auth/session',
     details: 'Đăng nhập thành công vào hệ thống',
@@ -132,7 +131,7 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T14:15:00Z',
     userId: 'usr004',
     userName: 'Phạm Thị Dung',
-    userRole: 'user',
+    userRole: 'MEMBER',
     action: 'FAILED_LOGIN',
     resource: 'auth/session',
     details: 'Thử đăng nhập với mật khẩu sai 3 lần liên tiếp',
@@ -147,7 +146,7 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T14:10:00Z',
     userId: 'usr001',
     userName: 'Nguyễn Văn An',
-    userRole: 'admin',
+    userRole: 'ADMIN',
     action: 'DELETE_USER',
     resource: 'user/789',
     details: 'Xóa tài khoản người dùng "test@school.edu"',
@@ -177,7 +176,7 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T13:55:00Z',
     userId: 'usr002',
     userName: 'Trần Thị Bình',
-    userRole: 'moderator',
+    userRole: 'STAFF',
     action: 'CREATE_QA',
     resource: 'qa/999',
     details: 'Tạo Q&A mới "Hướng dẫn sử dụng hệ thống chatbot"',
@@ -192,7 +191,7 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T13:50:00Z',
     userId: 'usr005',
     userName: 'Hoàng Minh Đức',
-    userRole: 'user',
+    userRole: 'MEMBER',
     action: 'CHANGE_PASSWORD',
     resource: 'user/profile',
     details: 'Thay đổi mật khẩu tài khoản',
@@ -207,10 +206,10 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T13:45:00Z',
     userId: 'usr001',
     userName: 'Nguyễn Văn An',
-    userRole: 'admin',
+    userRole: 'ADMIN',
     action: 'UPDATE_USER_ROLE',
     resource: 'user/456',
-    details: 'Thay đổi quyền người dùng từ "user" thành "moderator"',
+    details: 'Thay đổi quyền người dùng từ "MEMBER" thành "STAFF"',
     ipAddress: '192.168.1.100',
     userAgent: 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36',
     level: 'warning',
@@ -222,7 +221,7 @@ const mockActivityLogs: ActivityLog[] = [
     timestamp: '2024-11-17T13:40:00Z',
     userId: 'usr003',
     userName: 'Lê Hoàng Cường',
-    userRole: 'user',
+    userRole: 'MEMBER',
     action: 'LOGOUT',
     resource: 'auth/session',
     details: 'Đăng xuất khỏi hệ thống',
@@ -354,7 +353,7 @@ export default function ActivityLogs() {
 
   const getUniqueRoles = () => {
     const roles = [...new Set(logs.map(log => log.userRole))]
-    return roles.filter(role => role && role !== '')
+    return roles.filter(role => role)
   }
 
   const getRecentActivity = () => {
@@ -573,10 +572,7 @@ export default function ActivityLogs() {
                       <MenuItem value="all">Tất cả</MenuItem>
                       {getUniqueRoles().map(role => (
                         <MenuItem key={role} value={role}>
-                          {role === 'admin' ? 'Quản trị viên' :
-                           role === 'moderator' ? 'Điều hành viên' :
-                           role === 'user' ? 'Người dùng' :
-                           role === 'system' ? 'Hệ thống' : role}
+                          {RoleLabels[role as Role] || (role === 'system' ? 'Hệ thống' : role)}
                         </MenuItem>
                       ))}
                     </Select>
@@ -673,9 +669,10 @@ export default function ActivityLogs() {
                                 <Box>
                                   <Typography variant="body2">{log.userName}</Typography>
                                   <Chip 
-                                    label={log.userRole} 
+                                    label={log.userRole === 'system' ? 'Hệ thống' : (RoleLabels[log.userRole as Role] || log.userRole)} 
                                     size="small" 
                                     variant="outlined"
+                                    color={log.userRole === 'system' ? 'info' : (RoleColors[log.userRole as Role] || 'default')}
                                     sx={{ fontSize: '0.7rem', height: 16 }}
                                   />
                                 </Box>
@@ -777,7 +774,7 @@ export default function ActivityLogs() {
                         <AccordionDetails>
                           <Stack spacing={1}>
                             <Typography variant="body2">
-                              <strong>Người dùng:</strong> {log.userName} ({log.userRole})
+                              <strong>Người dùng:</strong> {log.userName} ({log.userRole === 'system' ? 'Hệ thống' : (RoleLabels[log.userRole as Role] || log.userRole)})
                             </Typography>
                             <Typography variant="body2">
                               <strong>Hành động:</strong> {actionLabels[log.action] || log.action}
@@ -881,14 +878,9 @@ export default function ActivityLogs() {
                         </Typography>
                         <Stack direction="row" spacing={1} alignItems="center">
                           <Chip 
-                            label={selectedLog.userRole === 'admin' ? 'Quản trị viên' :
-                                  selectedLog.userRole === 'moderator' ? 'Điều hành viên' :
-                                  selectedLog.userRole === 'user' ? 'Người dùng' :
-                                  selectedLog.userRole === 'system' ? 'Hệ thống' : selectedLog.userRole}
+                            label={RoleLabels[selectedLog.userRole as Role] || (selectedLog.userRole === 'system' ? 'Hệ thống' : selectedLog.userRole)}
                             size="small"
-                            color={selectedLog.userRole === 'admin' ? 'error' : 
-                                  selectedLog.userRole === 'moderator' ? 'warning' :
-                                  selectedLog.userRole === 'system' ? 'info' : 'default'}
+                            color={selectedLog.userRole === 'system' ? 'info' : (RoleColors[selectedLog.userRole as Role] || 'default')}
                           />
                           <Typography variant="body2" color="text.secondary">
                             ID: {selectedLog.userId}

@@ -56,6 +56,8 @@ import CampaignIcon from '@mui/icons-material/esm/Campaign'
 import AnnouncementIcon from '@mui/icons-material/esm/Announcement'
 import { useNavigate } from 'react-router-dom'
 import { vi } from 'date-fns/locale'
+import type { Recipients } from '../types/roles'
+import { RecipientLabels } from '../types/roles'
 
 interface Notification {
   id: string
@@ -64,7 +66,7 @@ interface Notification {
   type: 'info' | 'warning' | 'success' | 'error'
   priority: 'high' | 'medium' | 'low'
   status: 'draft' | 'scheduled' | 'sent' | 'failed'
-  recipients: 'all' | 'students' | 'teachers' | 'admins' | 'custom'
+  recipients: Recipients
   customRecipients?: string[]
   createdAt: string
   scheduledAt?: string
@@ -98,7 +100,7 @@ const mockNotifications: Notification[] = [
     type: 'warning',
     priority: 'high',
     status: 'sent',
-    recipients: 'students',
+    recipients: 'MEMBER',
     createdAt: '2024-11-10T14:30:00Z',
     scheduledAt: '2024-11-11T08:00:00Z',
     sentAt: '2024-11-11T08:00:00Z',
@@ -127,7 +129,7 @@ const mockNotifications: Notification[] = [
     type: 'success',
     priority: 'medium',
     status: 'draft',
-    recipients: 'teachers',
+    recipients: 'STAFF',
     createdAt: '2024-11-16T10:15:00Z',
     readCount: 0,
     totalRecipients: 200,
@@ -140,7 +142,7 @@ const mockNotifications: Notification[] = [
     type: 'error',
     priority: 'high',
     status: 'failed',
-    recipients: 'students',
+    recipients: 'MEMBER',
     createdAt: '2024-11-17T11:30:00Z',
     scheduledAt: '2024-11-17T12:00:00Z',
     readCount: 0,
@@ -189,13 +191,7 @@ const priorityColors = {
   low: 'info'
 } as const
 
-const recipientLabels = {
-  all: 'Tất cả',
-  students: 'Sinh viên',
-  teachers: 'Giảng viên',
-  admins: 'Quản trị viên',
-  custom: 'Tùy chọn'
-}
+const recipientLabels = RecipientLabels
 
 export default function NotificationManagement() {
   const navigate = useNavigate()
@@ -295,8 +291,8 @@ export default function NotificationManagement() {
       sentAt: newNotification.sendNow ? new Date().toISOString() : undefined,
       readCount: 0,
       totalRecipients: newNotification.recipients === 'all' ? 1500 : 
-                      newNotification.recipients === 'students' ? 1200 :
-                      newNotification.recipients === 'teachers' ? 200 : 100,
+                      newNotification.recipients === 'MEMBER' ? 1200 :
+                      newNotification.recipients === 'STAFF' ? 200 : 100,
       author: 'Admin'
     }
     
@@ -694,9 +690,9 @@ export default function NotificationManagement() {
                     label="Đối tượng"
                   >
                     <MenuItem value="all">Tất cả</MenuItem>
-                    <MenuItem value="students">Sinh viên</MenuItem>
-                    <MenuItem value="teachers">Giảng viên</MenuItem>
-                    <MenuItem value="admins">Quản trị viên</MenuItem>
+                    <MenuItem value="MEMBER">Thành viên</MenuItem>
+                    <MenuItem value="STAFF">Nhân viên</MenuItem>
+                    <MenuItem value="ADMIN">Quản trị viên</MenuItem>
                   </Select>
                 </FormControl>
               </Stack>
@@ -787,9 +783,9 @@ export default function NotificationManagement() {
                       label="Đối tượng"
                     >
                       <MenuItem value="all">Tất cả</MenuItem>
-                      <MenuItem value="students">Sinh viên</MenuItem>
-                      <MenuItem value="teachers">Giảng viên</MenuItem>
-                      <MenuItem value="admins">Quản trị viên</MenuItem>
+                      <MenuItem value="MEMBER">Thành viên</MenuItem>
+                      <MenuItem value="STAFF">Nhân viên</MenuItem>
+                      <MenuItem value="ADMIN">Quản trị viên</MenuItem>
                     </Select>
                   </FormControl>
                 </Stack>

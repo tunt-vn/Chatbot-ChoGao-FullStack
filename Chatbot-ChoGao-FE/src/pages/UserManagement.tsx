@@ -39,12 +39,14 @@ import AddIcon from '@mui/icons-material/esm/Add'
 import SearchIcon from '@mui/icons-material/esm/Search'
 import FilterListIcon from '@mui/icons-material/esm/FilterList'
 import { useNavigate } from 'react-router-dom'
+import type { Role } from '../types/roles'
+import { RoleLabels, RoleColors } from '../types/roles'
 
 interface User {
   id: string
   name: string
   email: string
-  role: 'admin' | 'user' | 'moderator'
+  role: Role
   status: 'active' | 'inactive' | 'pending'
   createdAt: string
   lastLogin: string | null
@@ -57,7 +59,7 @@ const mockUsers: User[] = [
     id: '1',
     name: 'Nguyễn Văn An',
     email: 'an.nguyen@school.edu',
-    role: 'admin',
+    role: 'ADMIN',
     status: 'active',
     createdAt: '2024-01-15T08:30:00Z',
     lastLogin: '2024-11-17T09:00:00Z'
@@ -66,7 +68,7 @@ const mockUsers: User[] = [
     id: '2',
     name: 'Trần Thị Bình',
     email: 'binh.tran@school.edu',
-    role: 'moderator',
+    role: 'STAFF',
     status: 'active',
     createdAt: '2024-02-20T10:15:00Z',
     lastLogin: '2024-11-16T14:30:00Z'
@@ -75,7 +77,7 @@ const mockUsers: User[] = [
     id: '3',
     name: 'Lê Hoàng Cường',
     email: 'cuong.le@school.edu',
-    role: 'user',
+    role: 'MEMBER',
     status: 'active',
     createdAt: '2024-03-10T16:45:00Z',
     lastLogin: '2024-11-15T11:20:00Z'
@@ -84,7 +86,7 @@ const mockUsers: User[] = [
     id: '4',
     name: 'Phạm Thị Dung',
     email: 'dung.pham@school.edu',
-    role: 'user',
+    role: 'MEMBER',
     status: 'inactive',
     createdAt: '2024-04-05T13:20:00Z',
     lastLogin: '2024-10-20T16:45:00Z'
@@ -93,18 +95,14 @@ const mockUsers: User[] = [
     id: '5',
     name: 'Hoàng Minh Đức',
     email: 'duc.hoang@school.edu',
-    role: 'user',
+    role: 'MEMBER',
     status: 'pending',
     createdAt: '2024-11-10T11:30:00Z',
     lastLogin: null
   }
 ]
 
-const roleLabels = {
-  admin: 'Quản trị viên',
-  moderator: 'Điều hành viên',
-  user: 'Người dùng'
-}
+const roleLabels = RoleLabels
 
 const statusLabels = {
   active: 'Hoạt động',
@@ -138,7 +136,7 @@ export default function UserManagement() {
   const [newUser, setNewUser] = useState({
     name: '',
     email: '',
-    role: 'user' as User['role'],
+    role: 'MEMBER' as User['role'],
     status: 'active' as User['status']
   })
 
@@ -208,7 +206,7 @@ export default function UserManagement() {
     setUsers([...users, userToAdd])
     setSnackbar({ open: true, message: 'Thêm người dùng mới thành công', severity: 'success' })
     setIsAddDialogOpen(false)
-    setNewUser({ name: '', email: '', role: 'user', status: 'active' })
+    setNewUser({ name: '', email: '', role: 'MEMBER', status: 'active' })
   }
 
   const formatDate = (dateString: string | null) => {
@@ -291,9 +289,9 @@ export default function UserManagement() {
                   label="Vai trò"
                 >
                   <MenuItem value="all">Tất cả</MenuItem>
-                  <MenuItem value="admin">Quản trị viên</MenuItem>
-                  <MenuItem value="moderator">Điều hành viên</MenuItem>
-                  <MenuItem value="user">Người dùng</MenuItem>
+                  <MenuItem value="ADMIN">Quản trị viên</MenuItem>
+                  <MenuItem value="STAFF">Nhân viên</MenuItem>
+                  <MenuItem value="MEMBER">Thành viên</MenuItem>
                 </Select>
               </FormControl>
 
@@ -356,7 +354,7 @@ export default function UserManagement() {
                           <Chip
                             label={roleLabels[user.role]}
                             size="small"
-                            color={user.role === 'admin' ? 'error' : user.role === 'moderator' ? 'warning' : 'default'}
+                            color={RoleColors[user.role]}
                           />
                         </TableCell>
                         <TableCell>
@@ -455,13 +453,13 @@ export default function UserManagement() {
             <FormControl fullWidth>
               <InputLabel>Vai trò</InputLabel>
               <Select
-                value={selectedUser?.role || 'user'}
+                value={selectedUser?.role || 'MEMBER'}
                 onChange={(e) => selectedUser && setSelectedUser({ ...selectedUser, role: e.target.value as User['role'] })}
                 label="Vai trò"
               >
-                <MenuItem value="user">Người dùng</MenuItem>
-                <MenuItem value="moderator">Điều hành viên</MenuItem>
-                <MenuItem value="admin">Quản trị viên</MenuItem>
+                <MenuItem value="MEMBER">Thành viên</MenuItem>
+                <MenuItem value="STAFF">Nhân viên</MenuItem>
+                <MenuItem value="ADMIN">Quản trị viên</MenuItem>
               </Select>
             </FormControl>
             <FormControl fullWidth>
@@ -508,9 +506,9 @@ export default function UserManagement() {
                 onChange={(e) => setNewUser({ ...newUser, role: e.target.value as User['role'] })}
                 label="Vai trò"
               >
-                <MenuItem value="user">Người dùng</MenuItem>
-                <MenuItem value="moderator">Điều hành viên</MenuItem>
-                <MenuItem value="admin">Quản trị viên</MenuItem>
+                <MenuItem value="MEMBER">Thành viên</MenuItem>
+                <MenuItem value="STAFF">Nhân viên</MenuItem>
+                <MenuItem value="ADMIN">Quản trị viên</MenuItem>
               </Select>
             </FormControl>
             <FormControl fullWidth>
