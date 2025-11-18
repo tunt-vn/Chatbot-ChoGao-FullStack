@@ -130,15 +130,19 @@
 - [x] Token expiry handling
 - [x] Automatic redirect on 401
 
+### Recommended (Implemented ✅)
+- [x] Switch to HttpOnly cookies for tokens
+- [x] Implement refresh token mechanism
+- [x] Add rate limiting
+- [x] Implement API versioning
+- [x] Add audit logging
+
 ### Recommended (Future)
-- [ ] Switch to HttpOnly cookies for tokens
-- [ ] Implement refresh token mechanism
-- [ ] Add rate limiting
 - [ ] Add request signing
-- [ ] Implement API versioning
 - [ ] Add API key authentication
 - [ ] Add field-level encryption
-- [ ] Add audit logging
+- [ ] Add Two-Factor Authentication (2FA)
+- [ ] Add advanced rate limiting per user/endpoint
 
 ---
 
