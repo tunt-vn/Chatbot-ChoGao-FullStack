@@ -30,10 +30,6 @@ import {
   Tab,
   Switch,
   FormControlLabel,
-  Checkbox,
-  FormGroup,
-  Card,
-  CardContent,
   Avatar,
   ListItem,
   ListItemAvatar,
@@ -46,18 +42,14 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import NotificationsIcon from '@mui/icons-material/esm/Notifications'
 import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
-import AddIcon from '@mui/icons-material/esm/Add'
-import SearchIcon from '@mui/icons-material/esm/Search'
 import SendIcon from '@mui/icons-material/esm/Send'
-import ScheduleIcon from '@mui/icons-material/esm/Schedule'
-import GroupIcon from '@mui/icons-material/esm/Group'
-import PersonIcon from '@mui/icons-material/esm/Person'
-import CampaignIcon from '@mui/icons-material/esm/Campaign'
 import AnnouncementIcon from '@mui/icons-material/esm/Announcement'
 import { useNavigate } from 'react-router-dom'
 import { vi } from 'date-fns/locale'
 import type { Recipients } from '../types/roles'
 import { RecipientLabels } from '../types/roles'
+import AdminFilter from '../components/AdminFilter'
+import type { FilterField } from '../components/AdminFilter'
 
 interface Notification {
   id: string
@@ -200,8 +192,7 @@ export default function NotificationManagement() {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
-  const [typeFilter, setTypeFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [filterValues, setFilterValues] = useState({ type: 'all', status: 'all' })
   const [selectedNotification, setSelectedNotification] = useState<Notification | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -221,20 +212,48 @@ export default function NotificationManagement() {
     sendNow: false
   })
 
+  // Filter fields configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'type',
+      label: 'Loại thông báo',
+      options: [
+        { value: 'all', label: 'Tất cả' },
+        { value: 'info', label: 'Thông tin' },
+        { value: 'warning', label: 'Cảnh báo' },
+        { value: 'success', label: 'Thành công' },
+        { value: 'error', label: 'Lỗi' }
+      ],
+      defaultValue: 'all'
+    },
+    {
+      key: 'status',
+      label: 'Trạng thái',
+      options: [
+        { value: 'all', label: 'Tất cả' },
+        { value: 'draft', label: 'Bản nháp' },
+        { value: 'scheduled', label: 'Đã lên lịch' },
+        { value: 'sent', label: 'Đã gửi' },
+        { value: 'failed', label: 'Gửi thất bại' }
+      ],
+      defaultValue: 'all'
+    }
+  ]
+
   // Filter notifications
   useEffect(() => {
     let filtered = notifications.filter(notification => {
       const matchesSearch = notification.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           notification.content.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesType = typeFilter === 'all' || notification.type === typeFilter
-      const matchesStatus = statusFilter === 'all' || notification.status === statusFilter
+      const matchesType = filterValues.type === 'all' || notification.type === filterValues.type
+      const matchesStatus = filterValues.status === 'all' || notification.status === filterValues.status
       
       return matchesSearch && matchesType && matchesStatus
     })
 
     setFilteredNotifications(filtered)
     setPage(0)
-  }, [searchTerm, typeFilter, statusFilter, notifications])
+  }, [searchTerm, filterValues, notifications])
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage)
@@ -402,56 +421,17 @@ export default function NotificationManagement() {
           {tabValue === 0 && (
             <Box sx={{ p: 3 }}>
               {/* Search and Filter Controls */}
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} mb={3}>
-                <TextField
-                  placeholder="Tìm kiếm theo tiêu đề hoặc nội dung..."
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  InputProps={{
-                    startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                  }}
-                  sx={{ flexGrow: 1 }}
-                />
-                
-                <FormControl sx={{ minWidth: 150 }}>
-                  <InputLabel>Loại</InputLabel>
-                  <Select
-                    value={typeFilter}
-                    onChange={(e) => setTypeFilter(e.target.value)}
-                    label="Loại"
-                  >
-                    <MenuItem value="all">Tất cả</MenuItem>
-                    <MenuItem value="info">Thông tin</MenuItem>
-                    <MenuItem value="warning">Cảnh báo</MenuItem>
-                    <MenuItem value="success">Thành công</MenuItem>
-                    <MenuItem value="error">Lỗi</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <FormControl sx={{ minWidth: 150 }}>
-                  <InputLabel>Trạng thái</InputLabel>
-                  <Select
-                    value={statusFilter}
-                    onChange={(e) => setStatusFilter(e.target.value)}
-                    label="Trạng thái"
-                  >
-                    <MenuItem value="all">Tất cả</MenuItem>
-                    <MenuItem value="draft">Bản nháp</MenuItem>
-                    <MenuItem value="scheduled">Đã lên lịch</MenuItem>
-                    <MenuItem value="sent">Đã gửi</MenuItem>
-                    <MenuItem value="failed">Gửi thất bại</MenuItem>
-                  </Select>
-                </FormControl>
-
-                <Button
-                  variant="contained"
-                  startIcon={<AddIcon />}
-                  onClick={() => setIsAddDialogOpen(true)}
-                  sx={{ minWidth: 'max-content' }}
-                >
-                  Tạo thông báo
-                </Button>
-              </Stack>
+              <AdminFilter
+                searchPlaceholder="Tìm kiếm theo tiêu đề hoặc nội dung..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filterFields={filterFields}
+                filterValues={filterValues}
+                onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
+                addButtonText="Tạo thông báo"
+                onAdd={() => setIsAddDialogOpen(true)}
+                onClearFilters={() => setFilterValues({ type: 'all', status: 'all' })}
+              />
 
               {/* Notifications Table */}
               <TableContainer component={Paper} variant="outlined">

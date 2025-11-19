@@ -30,17 +30,16 @@ import {
   Tab,
   Accordion,
   AccordionSummary,
-  AccordionDetails,
-  TextareaAutosize
+  AccordionDetails
 } from '@mui/material'
 import QuizIcon from '@mui/icons-material/esm/Quiz'
 import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
-import AddIcon from '@mui/icons-material/esm/Add'
-import SearchIcon from '@mui/icons-material/esm/Search'
 import ExpandMoreIcon from '@mui/icons-material/esm/ExpandMore'
 import VisibilityIcon from '@mui/icons-material/esm/Visibility'
 import { useNavigate } from 'react-router-dom'
+import AdminFilter from '../components/AdminFilter'
+import type { FilterField } from '../components/AdminFilter'
 
 interface QAItem {
   id: string
@@ -164,8 +163,7 @@ export default function QAManagement() {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
-  const [categoryFilter, setCategoryFilter] = useState('Tất cả')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [filterValues, setFilterValues] = useState({ category: 'Tất cả', status: 'all' })
   const [selectedItem, setSelectedItem] = useState<QAItem | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -184,21 +182,42 @@ export default function QAManagement() {
     priority: 'medium' as QAItem['priority']
   })
 
+  // Filter fields configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'category',
+      label: 'Danh mục',
+      options: categories.map(cat => ({ value: cat, label: cat })),
+      defaultValue: 'Tất cả'
+    },
+    {
+      key: 'status',
+      label: 'Trạng thái',
+      options: [
+        { value: 'all', label: 'Tất cả' },
+        { value: 'active', label: 'Hoạt động' },
+        { value: 'inactive', label: 'Ngưng hoạt động' },
+        { value: 'draft', label: 'Bản nháp' }
+      ],
+      defaultValue: 'all'
+    }
+  ]
+
   // Filter items based on search term, category, and status
   useEffect(() => {
     let filtered = qaItems.filter(item => {
       const matchesSearch = item.question.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           item.answer.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           item.tags.some(tag => tag.toLowerCase().includes(searchTerm.toLowerCase()))
-      const matchesCategory = categoryFilter === 'Tất cả' || item.category === categoryFilter
-      const matchesStatus = statusFilter === 'all' || item.status === statusFilter
+      const matchesCategory = filterValues.category === 'Tất cả' || item.category === filterValues.category
+      const matchesStatus = filterValues.status === 'all' || item.status === filterValues.status
       
       return matchesSearch && matchesCategory && matchesStatus
     })
 
     setFilteredItems(filtered)
     setPage(0)
-  }, [searchTerm, categoryFilter, statusFilter, qaItems])
+  }, [searchTerm, filterValues, qaItems])
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage)
@@ -345,53 +364,17 @@ export default function QAManagement() {
         {tabValue === 0 && (
           <Box sx={{ p: 3 }}>
             {/* Search and Filter Controls */}
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} mb={3}>
-              <TextField
-                placeholder="Tìm kiếm câu hỏi, câu trả lời hoặc tags..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                }}
-                sx={{ flexGrow: 1 }}
-              />
-              
-              <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel>Danh mục</InputLabel>
-                <Select
-                  value={categoryFilter}
-                  onChange={(e) => setCategoryFilter(e.target.value)}
-                  label="Danh mục"
-                >
-                  {categories.map(category => (
-                    <MenuItem key={category} value={category}>{category}</MenuItem>
-                  ))}
-                </Select>
-              </FormControl>
-
-              <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel>Trạng thái</InputLabel>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  label="Trạng thái"
-                >
-                  <MenuItem value="all">Tất cả</MenuItem>
-                  <MenuItem value="active">Hoạt động</MenuItem>
-                  <MenuItem value="inactive">Ngưng hoạt động</MenuItem>
-                  <MenuItem value="draft">Bản nháp</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setIsAddDialogOpen(true)}
-                sx={{ minWidth: 'max-content' }}
-              >
-                Thêm Q&A
-              </Button>
-            </Stack>
+            <AdminFilter
+              searchPlaceholder="Tìm kiếm câu hỏi, câu trả lời hoặc tags..."
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              filterFields={filterFields}
+              filterValues={filterValues}
+              onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
+              addButtonText="Thêm Q&A"
+              onAdd={() => setIsAddDialogOpen(true)}
+              onClearFilters={() => setFilterValues({ category: 'Tất cả', status: 'all' })}
+            />
 
             {/* Q&A Table */}
             <TableContainer component={Paper} variant="outlined">

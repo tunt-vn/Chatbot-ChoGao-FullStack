@@ -14,11 +14,6 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  TextField,
-  FormControl,
-  InputLabel,
-  Select,
-  MenuItem,
   Tabs,
   Tab,
   Card,
@@ -40,11 +35,9 @@ import {
   DialogContent,
   DialogActions
 } from '@mui/material'
-import { DatePicker } from '@mui/x-date-pickers/DatePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
 import HistoryIcon from '@mui/icons-material/esm/History'
-import SearchIcon from '@mui/icons-material/esm/Search'
 import DownloadIcon from '@mui/icons-material/esm/Download'
 import RefreshIcon from '@mui/icons-material/esm/Refresh'
 import PersonIcon from '@mui/icons-material/esm/Person'
@@ -62,6 +55,8 @@ import { useNavigate } from 'react-router-dom'
 import { vi } from 'date-fns/locale'
 import type { Role } from '../types/roles'
 import { RoleLabels, RoleColors } from '../types/roles'
+import AdminFilter from '../components/AdminFilter'
+import type { FilterField } from '../components/AdminFilter'
 
 interface ActivityLog {
   id: string
@@ -83,7 +78,7 @@ interface ActivityLog {
 const mockActivityLogs: ActivityLog[] = [
   {
     id: '1',
-    timestamp: '2024-11-17T14:30:00Z',
+    timestamp: '2025-11-17T14:30:00Z',
     userId: 'usr001',
     userName: 'Nguyễn Văn An',
     userRole: 'ADMIN',
@@ -98,7 +93,7 @@ const mockActivityLogs: ActivityLog[] = [
   },
   {
     id: '2',
-    timestamp: '2024-11-17T14:25:00Z',
+    timestamp: '2025-11-17T14:25:00Z',
     userId: 'usr002',
     userName: 'Trần Thị Bình',
     userRole: 'STAFF',
@@ -128,7 +123,7 @@ const mockActivityLogs: ActivityLog[] = [
   },
   {
     id: '4',
-    timestamp: '2024-11-17T14:15:00Z',
+    timestamp: '2025-11-18T14:15:00Z',
     userId: 'usr004',
     userName: 'Phạm Thị Dung',
     userRole: 'MEMBER',
@@ -143,7 +138,7 @@ const mockActivityLogs: ActivityLog[] = [
   },
   {
     id: '5',
-    timestamp: '2024-11-17T14:10:00Z',
+    timestamp: '2025-11-18T14:10:00Z',
     userId: 'usr001',
     userName: 'Nguyễn Văn An',
     userRole: 'ADMIN',
@@ -158,7 +153,7 @@ const mockActivityLogs: ActivityLog[] = [
   },
   {
     id: '6',
-    timestamp: '2024-11-17T14:05:00Z',
+    timestamp: '2025-11-17T14:05:00Z',
     userId: 'system',
     userName: 'System',
     userRole: 'system',
@@ -173,7 +168,7 @@ const mockActivityLogs: ActivityLog[] = [
   },
   {
     id: '7',
-    timestamp: '2024-11-17T13:55:00Z',
+    timestamp: '2025-11-17T13:55:00Z',
     userId: 'usr002',
     userName: 'Trần Thị Bình',
     userRole: 'STAFF',
@@ -188,7 +183,7 @@ const mockActivityLogs: ActivityLog[] = [
   },
   {
     id: '8',
-    timestamp: '2024-11-17T13:50:00Z',
+    timestamp: '2025-11-16T13:50:00Z',
     userId: 'usr005',
     userName: 'Hoàng Minh Đức',
     userRole: 'MEMBER',
@@ -203,7 +198,7 @@ const mockActivityLogs: ActivityLog[] = [
   },
   {
     id: '9',
-    timestamp: '2024-11-17T13:45:00Z',
+    timestamp: '2025-11-16T13:45:00Z',
     userId: 'usr001',
     userName: 'Nguyễn Văn An',
     userRole: 'ADMIN',
@@ -218,7 +213,7 @@ const mockActivityLogs: ActivityLog[] = [
   },
   {
     id: '10',
-    timestamp: '2024-11-17T13:40:00Z',
+    timestamp: '2025-11-15T13:40:00Z',
     userId: 'usr003',
     userName: 'Lê Hoàng Cường',
     userRole: 'MEMBER',
@@ -297,9 +292,11 @@ export default function ActivityLogs() {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
-  const [moduleFilter, setModuleFilter] = useState<string>('all')
-  const [levelFilter, setLevelFilter] = useState<string>('all')
-  const [roleFilter, setRoleFilter] = useState<string>('all')
+  const [filterValues, setFilterValues] = useState({ 
+    module: 'all', 
+    level: 'all', 
+    role: 'all' 
+  })
   const [dateFrom, setDateFrom] = useState<Date | null>(null)
   const [dateTo, setDateTo] = useState<Date | null>(null)
   const [tabValue, setTabValue] = useState(0)
@@ -313,9 +310,9 @@ export default function ActivityLogs() {
       const matchesSearch = log.action.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           log.details.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           log.userName.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesModule = moduleFilter === 'all' || log.module === moduleFilter
-      const matchesLevel = levelFilter === 'all' || log.level === levelFilter
-      const matchesRole = roleFilter === 'all' || log.userRole === roleFilter
+      const matchesModule = filterValues.module === 'all' || log.module === filterValues.module
+      const matchesLevel = filterValues.level === 'all' || log.level === filterValues.level
+      const matchesRole = filterValues.role === 'all' || log.userRole === filterValues.role
       
       const logDate = new Date(log.timestamp)
       const matchesDateFrom = !dateFrom || logDate >= dateFrom
@@ -329,7 +326,7 @@ export default function ActivityLogs() {
 
     setFilteredLogs(filtered)
     setPage(0)
-  }, [searchTerm, moduleFilter, levelFilter, roleFilter, dateFrom, dateTo, logs])
+  }, [searchTerm, filterValues, dateFrom, dateTo, logs])
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage)
@@ -411,9 +408,7 @@ export default function ActivityLogs() {
     
     // Reset all filters
     setSearchTerm('')
-    setModuleFilter('all')
-    setLevelFilter('all')
-    setRoleFilter('all')
+    setFilterValues({ module: 'all', level: 'all', role: 'all' })
     setDateFrom(null)
     setDateTo(null)
     
@@ -433,6 +428,79 @@ export default function ActivityLogs() {
   }
 
   const stats = getActivityStats()
+
+  // Filter fields configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'module',
+      label: 'Phân hệ',
+      options: [
+        { value: 'all', label: 'Tất cả' },
+        ...Object.entries(moduleLabels).map(([key, label]) => ({ value: key, label }))
+      ],
+      defaultValue: 'all'
+    },
+    {
+      key: 'level',
+      label: 'Mức độ',
+      options: [
+        { value: 'all', label: 'Tất cả' },
+        ...Object.entries(levelLabels).map(([key, label]) => ({ value: key, label }))
+      ],
+      defaultValue: 'all'
+    },
+    {
+      key: 'role',
+      label: 'Vai trò',
+      options: [
+        { value: 'all', label: 'Tất cả' },
+        ...getUniqueRoles().map(role => ({
+          value: role,
+          label: RoleLabels[role as Role] || (role === 'system' ? 'Hệ thống' : role)
+        }))
+      ],
+      defaultValue: 'all'
+    }
+  ]
+
+  // Custom buttons for date filters and actions
+  const customButtons = [
+    <Button
+      key="refresh"
+      variant="outlined"
+      startIcon={
+        <RefreshIcon 
+          sx={{ 
+            animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
+            '@keyframes spin': {
+              '0%': { transform: 'rotate(0deg)' },
+              '100%': { transform: 'rotate(360deg)' },
+            },
+          }} 
+        />
+      }
+      onClick={handleRefresh}
+      disabled={isRefreshing}
+    >
+      {isRefreshing ? 'Đang tải...' : 'Làm mới'}
+    </Button>,
+    <Button
+      key="export"
+      variant="contained"
+      startIcon={<DownloadIcon />}
+      onClick={exportLogs}
+    >
+      Xuất file
+    </Button>
+  ]
+
+  // Date range filter configuration
+  const dateRangeFilter = {
+    fromKey: 'dateFrom',
+    toKey: 'dateTo',
+    fromLabel: 'Từ ngày',
+    toLabel: 'Đến ngày'
+  }
 
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
@@ -522,110 +590,27 @@ export default function ActivityLogs() {
           {tabValue === 0 && (
             <Box sx={{ p: 3 }}>
               {/* Filter Controls */}
-              <Stack spacing={2} mb={3}>
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                  <TextField
-                    placeholder="Tìm kiếm theo hành động, người dùng, mô tả..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    InputProps={{
-                      startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                    }}
-                    sx={{ flexGrow: 1 }}
-                  />
-                  
-                  <FormControl sx={{ minWidth: 120 }}>
-                    <InputLabel>Module</InputLabel>
-                    <Select
-                      value={moduleFilter}
-                      onChange={(e) => setModuleFilter(e.target.value)}
-                      label="Module"
-                    >
-                      <MenuItem value="all">Tất cả</MenuItem>
-                      {Object.entries(moduleLabels).map(([key, label]) => (
-                        <MenuItem key={key} value={key}>{label}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl sx={{ minWidth: 120 }}>
-                    <InputLabel>Mức độ</InputLabel>
-                    <Select
-                      value={levelFilter}
-                      onChange={(e) => setLevelFilter(e.target.value)}
-                      label="Mức độ"
-                    >
-                      <MenuItem value="all">Tất cả</MenuItem>
-                      {Object.entries(levelLabels).map(([key, label]) => (
-                        <MenuItem key={key} value={key}>{label}</MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-
-                  <FormControl sx={{ minWidth: 150 }}>
-                    <InputLabel>Role</InputLabel>
-                    <Select
-                      value={roleFilter}
-                      onChange={(e) => setRoleFilter(e.target.value)}
-                      label="Role"
-                    >
-                      <MenuItem value="all">Tất cả</MenuItem>
-                      {getUniqueRoles().map(role => (
-                        <MenuItem key={role} value={role}>
-                          {RoleLabels[role as Role] || (role === 'system' ? 'Hệ thống' : role)}
-                        </MenuItem>
-                      ))}
-                    </Select>
-                  </FormControl>
-                </Stack>
-
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="center">
-                  <DatePicker
-                    label="Từ ngày"
-                    value={dateFrom}
-                    onChange={(newValue) => setDateFrom(newValue)}
-                    slotProps={{ textField: { size: 'small' } }}
-                  />
-                  <DatePicker
-                    label="Đến ngày"
-                    value={dateTo}
-                    onChange={(newValue) => setDateTo(newValue)}
-                    slotProps={{ textField: { size: 'small' } }}
-                  />
-                  
-                  <Stack direction="row" spacing={1} sx={{ ml: 'auto' }}>
-                    <Button
-                      variant="outlined"
-                      startIcon={
-                        <RefreshIcon 
-                          sx={{ 
-                            animation: isRefreshing ? 'spin 1s linear infinite' : 'none',
-                            '@keyframes spin': {
-                              '0%': {
-                                transform: 'rotate(0deg)',
-                              },
-                              '100%': {
-                                transform: 'rotate(360deg)',
-                              },
-                            },
-                          }} 
-                        />
-                      }
-                      onClick={handleRefresh}
-                      disabled={isRefreshing}
-                    >
-                      {isRefreshing ? 'Đang tải...' : 'Làm mới'}
-                    </Button>
-                    <Button
-                      variant="contained"
-                      startIcon={<DownloadIcon />}
-                      onClick={exportLogs}
-                    >
-                      Xuất file
-                    </Button>
-                  </Stack>
-                </Stack>
-              </Stack>
+              <AdminFilter
+                searchPlaceholder="Tìm kiếm theo hành động, người dùng, mô tả..."
+                searchValue={searchTerm}
+                onSearchChange={setSearchTerm}
+                filterFields={filterFields}
+                filterValues={filterValues}
+                onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
+                dateRangeFilter={dateRangeFilter}
+                dateValues={{ from: dateFrom, to: dateTo }}
+                onDateChange={(key, value) => {
+                  if (key === 'from') setDateFrom(value)
+                  else setDateTo(value)
+                }}
+                showAddButton={false}
+                customButtons={customButtons}
+                onClearFilters={() => {
+                  setFilterValues({ module: 'all', level: 'all', role: 'all' })
+                  setDateFrom(null)
+                  setDateTo(null)
+                }}
+              />
 
               {/* Logs Table */}
               <TableContainer component={Paper} variant="outlined">

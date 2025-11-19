@@ -27,20 +27,17 @@ import {
   Alert,
   Snackbar,
   Tooltip,
-  Switch,
-  FormControlLabel,
   Tabs,
   Tab
 } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/esm/People'
 import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
-import AddIcon from '@mui/icons-material/esm/Add'
-import SearchIcon from '@mui/icons-material/esm/Search'
-import FilterListIcon from '@mui/icons-material/esm/FilterList'
 import { useNavigate } from 'react-router-dom'
 import type { Role } from '../types/roles'
 import { RoleLabels, RoleColors } from '../types/roles'
+import AdminFilter from '../components/AdminFilter'
+import type { FilterField } from '../components/AdminFilter'
 
 interface User {
   id: string
@@ -123,8 +120,7 @@ export default function UserManagement() {
   const [page, setPage] = useState(0)
   const [rowsPerPage, setRowsPerPage] = useState(10)
   const [searchTerm, setSearchTerm] = useState('')
-  const [roleFilter, setRoleFilter] = useState<string>('all')
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [filterValues, setFilterValues] = useState({ role: 'all', status: 'all' })
   const [selectedUser, setSelectedUser] = useState<User | null>(null)
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
@@ -140,20 +136,46 @@ export default function UserManagement() {
     status: 'active' as User['status']
   })
 
+  // Filter fields configuration
+  const filterFields: FilterField[] = [
+    {
+      key: 'role',
+      label: 'Vai trò',
+      options: [
+        { value: 'all', label: 'Tất cả' },
+        { value: 'ADMIN', label: 'Quản trị viên' },
+        { value: 'STAFF', label: 'Nhân viên' },
+        { value: 'MEMBER', label: 'Thành viên' }
+      ],
+      defaultValue: 'all'
+    },
+    {
+      key: 'status',
+      label: 'Trạng thái',
+      options: [
+        { value: 'all', label: 'Tất cả' },
+        { value: 'active', label: 'Hoạt động' },
+        { value: 'inactive', label: 'Ngưng hoạt động' },
+        { value: 'pending', label: 'Chờ duyệt' }
+      ],
+      defaultValue: 'all'
+    }
+  ]
+
   // Filter users based on search term, role, and status
   useEffect(() => {
     let filtered = users.filter(user => {
       const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
                           user.email.toLowerCase().includes(searchTerm.toLowerCase())
-      const matchesRole = roleFilter === 'all' || user.role === roleFilter
-      const matchesStatus = statusFilter === 'all' || user.status === statusFilter
+      const matchesRole = filterValues.role === 'all' || user.role === filterValues.role
+      const matchesStatus = filterValues.status === 'all' || user.status === filterValues.status
       
       return matchesSearch && matchesRole && matchesStatus
     })
 
     setFilteredUsers(filtered)
     setPage(0)
-  }, [searchTerm, roleFilter, statusFilter, users])
+  }, [searchTerm, filterValues, users])
 
   const handleChangePage = (_: unknown, newPage: number) => {
     setPage(newPage)
@@ -270,54 +292,17 @@ export default function UserManagement() {
         {tabValue === 0 && (
           <Box sx={{ p: 3 }}>
             {/* Search and Filter Controls */}
-            <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} mb={3}>
-              <TextField
-                placeholder="Tìm kiếm theo tên hoặc email..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                InputProps={{
-                  startAdornment: <SearchIcon sx={{ mr: 1, color: 'text.secondary' }} />
-                }}
-                sx={{ flexGrow: 1 }}
-              />
-              
-              <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel>Vai trò</InputLabel>
-                <Select
-                  value={roleFilter}
-                  onChange={(e) => setRoleFilter(e.target.value)}
-                  label="Vai trò"
-                >
-                  <MenuItem value="all">Tất cả</MenuItem>
-                  <MenuItem value="ADMIN">Quản trị viên</MenuItem>
-                  <MenuItem value="STAFF">Nhân viên</MenuItem>
-                  <MenuItem value="MEMBER">Thành viên</MenuItem>
-                </Select>
-              </FormControl>
-
-              <FormControl sx={{ minWidth: 150 }}>
-                <InputLabel>Trạng thái</InputLabel>
-                <Select
-                  value={statusFilter}
-                  onChange={(e) => setStatusFilter(e.target.value)}
-                  label="Trạng thái"
-                >
-                  <MenuItem value="all">Tất cả</MenuItem>
-                  <MenuItem value="active">Hoạt động</MenuItem>
-                  <MenuItem value="inactive">Ngưng hoạt động</MenuItem>
-                  <MenuItem value="pending">Chờ duyệt</MenuItem>
-                </Select>
-              </FormControl>
-
-              <Button
-                variant="contained"
-                startIcon={<AddIcon />}
-                onClick={() => setIsAddDialogOpen(true)}
-                sx={{ minWidth: 'max-content' }}
-              >
-                Thêm người dùng
-              </Button>
-            </Stack>
+            <AdminFilter
+              searchPlaceholder="Tìm kiếm theo tên hoặc email..."
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              filterFields={filterFields}
+              filterValues={filterValues}
+              onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
+              addButtonText="Thêm người dùng"
+              onAdd={() => setIsAddDialogOpen(true)}
+              onClearFilters={() => setFilterValues({ role: 'all', status: 'all' })}
+            />
 
             {/* Users Table */}
             <TableContainer component={Paper} variant="outlined">
