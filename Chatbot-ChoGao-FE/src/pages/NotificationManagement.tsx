@@ -1,3 +1,4 @@
+//notification-management
 import { useState, useEffect } from 'react'
 import {
   Box,
@@ -24,15 +25,8 @@ import {
   MenuItem,
   Alert,
   Snackbar,
-  Tabs,
-  Tab,
   Switch,
-  FormControlLabel,
-  Avatar,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
-  List
+  FormControlLabel
 } from '@mui/material'
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
@@ -41,7 +35,6 @@ import NotificationsIcon from '@mui/icons-material/esm/Notifications'
 import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
 import SendIcon from '@mui/icons-material/esm/Send'
-import AnnouncementIcon from '@mui/icons-material/esm/Announcement'
 import VisibilityIcon from '@mui/icons-material/esm/Visibility'
 import ContentCopyIcon from '@mui/icons-material/esm/ContentCopy'
 import { useNavigate } from 'react-router-dom'
@@ -51,6 +44,7 @@ import { RecipientLabels } from '../types/roles'
 import AdminFilter from '../components/AdminFilter'
 import type { FilterField } from '../components/AdminFilter'
 import ActionDropdown from '../components/ActionDropdown'
+import StatisticsCards, { NotificationStats } from '../components/StatisticsCards'
 
 interface Notification {
   id: string
@@ -199,7 +193,6 @@ export default function NotificationManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
-  const [tabValue, setTabValue] = useState(0)
 
   // New notification form state
   const [newNotification, setNewNotification] = useState({
@@ -364,13 +357,6 @@ export default function NotificationManagement() {
       : '0'
   }
 
-  const getRecentNotifications = () => {
-    return notifications
-      .filter(n => n.status === 'sent')
-      .sort((a, b) => new Date(b.sentAt!).getTime() - new Date(a.sentAt!).getTime())
-      .slice(0, 5)
-  }
-
   return (
     <LocalizationProvider dateAdapter={AdapterDateFns} adapterLocale={vi}>
       <Stack spacing={3}>
@@ -408,31 +394,24 @@ export default function NotificationManagement() {
           </Typography>
         </Box>
 
-        {/* Tabs */}
-        <Paper sx={{ borderRadius: 2 }}>
-          <Tabs
-            value={tabValue}
-            onChange={(_, newValue) => setTabValue(newValue)}
-            sx={{ borderBottom: 1, borderColor: 'divider' }}
-          >
-            <Tab label="Danh sách thông báo" />
-            <Tab label="Thống kê" />
-          </Tabs>
+        {/* Statistics Cards */}
+        <StatisticsCards cards={NotificationStats(notifications)} />
 
-          {tabValue === 0 && (
-            <Box sx={{ p: 3 }}>
-              {/* Search and Filter Controls */}
-              <AdminFilter
-                searchPlaceholder="Tìm kiếm theo tiêu đề hoặc nội dung..."
-                searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
-                filterFields={filterFields}
-                filterValues={filterValues}
-                onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
-                addButtonText="Tạo thông báo"
-                onAdd={() => setIsAddDialogOpen(true)}
-                onClearFilters={() => setFilterValues({ type: 'all', status: 'all' })}
-              />
+        {/* Main Content */}
+        <Paper sx={{ borderRadius: 2 }}>
+          <Box sx={{ p: 3 }}>
+            {/* Search and Filter Controls */}
+            <AdminFilter
+              searchPlaceholder="Tìm kiếm theo tiêu đề hoặc nội dung..."
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              filterFields={filterFields}
+              filterValues={filterValues}
+              onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
+              addButtonText="Tạo thông báo"
+              onAdd={() => setIsAddDialogOpen(true)}
+              onClearFilters={() => setFilterValues({ type: 'all', status: 'all' })}
+            />
 
               {/* Notifications Table */}
               <TableContainer component={Paper} variant="outlined">
@@ -591,55 +570,7 @@ export default function NotificationManagement() {
                   }
                 />
               </TableContainer>
-            </Box>
-          )}
-
-          {tabValue === 1 && (
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Thống kê thông báo
-              </Typography>
-              <Stack spacing={3}>
-                {/* General Stats */}
-                <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                  <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)', flexGrow: 1 }}>
-                    <Typography variant="subtitle1">Tổng thông báo: {notifications.length}</Typography>
-                  </Paper>
-                  <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)', flexGrow: 1 }}>
-                    <Typography variant="subtitle1">Đã gửi: {notifications.filter(n => n.status === 'sent').length}</Typography>
-                  </Paper>
-                  <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)', flexGrow: 1 }}>
-                    <Typography variant="subtitle1">Đang lên lịch: {notifications.filter(n => n.status === 'scheduled').length}</Typography>
-                  </Paper>
-                  <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)', flexGrow: 1 }}>
-                    <Typography variant="subtitle1">Bản nháp: {notifications.filter(n => n.status === 'draft').length}</Typography>
-                  </Paper>
-                </Stack>
-
-                {/* Recent Notifications */}
-                <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
-                  <Typography variant="h6" gutterBottom>
-                    Thông báo gần đây
-                  </Typography>
-                  <List>
-                    {getRecentNotifications().map((notification) => (
-                      <ListItem key={notification.id} divider>
-                        <ListItemAvatar>
-                          <Avatar sx={{ bgcolor: `${typeColors[notification.type]}.main` }}>
-                            <AnnouncementIcon />
-                          </Avatar>
-                        </ListItemAvatar>
-                        <ListItemText
-                          primary={notification.title}
-                          secondary={`${formatDate(notification.sentAt)} - Tỷ lệ đọc: ${getReadRate(notification)}%`}
-                        />
-                      </ListItem>
-                    ))}
-                  </List>
-                </Paper>
-              </Stack>
-            </Box>
-          )}
+          </Box>
         </Paper>
 
         {/* Add Notification Dialog */}

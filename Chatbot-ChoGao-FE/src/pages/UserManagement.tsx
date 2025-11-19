@@ -1,3 +1,4 @@
+//user-management
 import { useState, useEffect } from 'react'
 import {
   Box,
@@ -25,8 +26,7 @@ import {
   MenuItem,
   Alert,
   Snackbar,
-  Tabs,
-  Tab
+  Grid
 } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/esm/People'
 import EditIcon from '@mui/icons-material/esm/Edit'
@@ -40,6 +40,7 @@ import { RoleLabels, RoleColors } from '../types/roles'
 import AdminFilter from '../components/AdminFilter'
 import type { FilterField } from '../components/AdminFilter'
 import ActionDropdown from '../components/ActionDropdown'
+import StatisticsCards, { UserManagementStats } from '../components/StatisticsCards'
 
 interface User {
   id: string
@@ -128,7 +129,6 @@ export default function UserManagement() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
-  const [tabValue, setTabValue] = useState(0)
 
   // New user form state
   const [newUser, setNewUser] = useState({
@@ -280,31 +280,24 @@ export default function UserManagement() {
         </Typography>
       </Box>
 
-      {/* Tabs */}
-      <Paper sx={{ borderRadius: 2 }}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, newValue) => setTabValue(newValue)}
-          sx={{ borderBottom: 1, borderColor: 'divider' }}
-        >
-          <Tab label="Danh sách người dùng" />
-          <Tab label="Thống kê" />
-        </Tabs>
+      {/* Statistics Cards */}
+      <StatisticsCards cards={UserManagementStats(users)} />
 
-        {tabValue === 0 && (
-          <Box sx={{ p: 3 }}>
-            {/* Search and Filter Controls */}
-            <AdminFilter
-              searchPlaceholder="Tìm kiếm theo tên hoặc email..."
-              searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
-              filterFields={filterFields}
-              filterValues={filterValues}
-              onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
-              addButtonText="Thêm người dùng"
-              onAdd={() => setIsAddDialogOpen(true)}
-              onClearFilters={() => setFilterValues({ role: 'all', status: 'all' })}
-            />
+      {/* Main Content */}
+      <Paper sx={{ borderRadius: 2 }}>
+        <Box sx={{ p: 3 }}>
+          {/* Search and Filter Controls */}
+          <AdminFilter
+            searchPlaceholder="Tìm kiếm theo tên hoặc email..."
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterFields={filterFields}
+            filterValues={filterValues}
+            onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
+            addButtonText="Thêm người dùng"
+            onAdd={() => setIsAddDialogOpen(true)}
+            onClearFilters={() => setFilterValues({ role: 'all', status: 'all' })}
+          />
 
             {/* Users Table */}
             <TableContainer component={Paper} variant="outlined">
@@ -421,31 +414,9 @@ export default function UserManagement() {
                   `${from}-${to} của ${count !== -1 ? count : `hơn ${to}`}`
                 }
               />
-            </TableContainer>
-          </Box>
-        )}
-
-        {tabValue === 1 && (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Thống kê người dùng
-            </Typography>
-            <Stack spacing={2}>
-              <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
-                <Typography variant="subtitle1">Tổng số người dùng: {users.length}</Typography>
-              </Paper>
-              <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
-                <Typography variant="subtitle1">Đang hoạt động: {users.filter(u => u.status === 'active').length}</Typography>
-              </Paper>
-              <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
-                <Typography variant="subtitle1">Chờ duyệt: {users.filter(u => u.status === 'pending').length}</Typography>
-              </Paper>
-            </Stack>
-          </Box>
-        )}
-      </Paper>
-
-      {/* Edit User Dialog */}
+              </TableContainer>
+        </Box>
+      </Paper>      {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Chỉnh sửa thông tin người dùng</DialogTitle>
         <DialogContent>

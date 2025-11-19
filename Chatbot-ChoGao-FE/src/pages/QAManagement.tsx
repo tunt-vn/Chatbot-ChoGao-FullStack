@@ -1,3 +1,4 @@
+//qa-management
 import { useState, useEffect } from 'react'
 import {
   Box,
@@ -24,22 +25,18 @@ import {
   MenuItem,
   Alert,
   Snackbar,
-  Tabs,
-  Tab,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails
+  Grid
 } from '@mui/material'
 import QuizIcon from '@mui/icons-material/esm/Quiz'
 import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
-import ExpandMoreIcon from '@mui/icons-material/esm/ExpandMore'
 import VisibilityIcon from '@mui/icons-material/esm/Visibility'
 import VisibilityOffIcon from '@mui/icons-material/esm/VisibilityOff'
 import { useNavigate } from 'react-router-dom'
 import AdminFilter from '../components/AdminFilter'
 import type { FilterField } from '../components/AdminFilter'
 import ActionDropdown from '../components/ActionDropdown'
+import StatisticsCards, { QAManagementStats } from '../components/StatisticsCards'
 
 interface QAItem {
   id: string
@@ -170,7 +167,6 @@ export default function QAManagement() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
   const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
-  const [tabValue, setTabValue] = useState(0)
 
   // New QA item form state
   const [newItem, setNewItem] = useState({
@@ -303,12 +299,6 @@ export default function QAManagement() {
     })
   }
 
-  const getTopQuestions = () => {
-    return [...qaItems]
-      .sort((a, b) => b.views - a.views)
-      .slice(0, 5)
-  }
-
   const getHelpfulnessRate = (item: QAItem) => {
     const total = item.isHelpful + item.isNotHelpful
     return total > 0 ? ((item.isHelpful / total) * 100).toFixed(1) : '0'
@@ -350,31 +340,24 @@ export default function QAManagement() {
         </Typography>
       </Box>
 
-      {/* Tabs */}
-      <Paper sx={{ borderRadius: 2 }}>
-        <Tabs
-          value={tabValue}
-          onChange={(_, newValue) => setTabValue(newValue)}
-          sx={{ borderBottom: 1, borderColor: 'divider' }}
-        >
-          <Tab label="Danh sách Q&A" />
-          <Tab label="Thống kê" />
-        </Tabs>
+      {/* Statistics Cards */}
+      <StatisticsCards cards={QAManagementStats(qaItems)} />
 
-        {tabValue === 0 && (
-          <Box sx={{ p: 3 }}>
-            {/* Search and Filter Controls */}
-            <AdminFilter
-              searchPlaceholder="Tìm kiếm câu hỏi, câu trả lời hoặc tags..."
-              searchValue={searchTerm}
-              onSearchChange={setSearchTerm}
-              filterFields={filterFields}
-              filterValues={filterValues}
-              onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
-              addButtonText="Thêm Q&A"
-              onAdd={() => setIsAddDialogOpen(true)}
-              onClearFilters={() => setFilterValues({ category: 'Tất cả', status: 'all' })}
-            />
+      {/* Main Content */}
+      <Paper sx={{ borderRadius: 2 }}>
+        <Box sx={{ p: 3 }}>
+          {/* Search and Filter Controls */}
+          <AdminFilter
+            searchPlaceholder="Tìm kiếm câu hỏi, câu trả lời hoặc tags..."
+            searchValue={searchTerm}
+            onSearchChange={setSearchTerm}
+            filterFields={filterFields}
+            filterValues={filterValues}
+            onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
+            addButtonText="Thêm Q&A"
+            onAdd={() => setIsAddDialogOpen(true)}
+            onClearFilters={() => setFilterValues({ category: 'Tất cả', status: 'all' })}
+          />
 
             {/* Q&A Table */}
             <TableContainer component={Paper} variant="outlined">
@@ -501,61 +484,9 @@ export default function QAManagement() {
                   `${from}-${to} của ${count !== -1 ? count : `hơn ${to}`}`
                 }
               />
-            </TableContainer>
-          </Box>
-        )}
-
-        {tabValue === 1 && (
-          <Box sx={{ p: 3 }}>
-            <Typography variant="h6" gutterBottom>
-              Thống kê Q&A
-            </Typography>
-            <Stack spacing={3}>
-              {/* General Stats */}
-              <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-                <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)', flexGrow: 1 }}>
-                  <Typography variant="subtitle1">Tổng số câu hỏi: {qaItems.length}</Typography>
-                </Paper>
-                <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)', flexGrow: 1 }}>
-                  <Typography variant="subtitle1">Đang hoạt động: {qaItems.filter(q => q.status === 'active').length}</Typography>
-                </Paper>
-                <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)', flexGrow: 1 }}>
-                  <Typography variant="subtitle1">Bản nháp: {qaItems.filter(q => q.status === 'draft').length}</Typography>
-                </Paper>
-              </Stack>
-
-              {/* Top Questions */}
-              <Paper sx={{ p: 2, border: '1px solid rgba(0,0,0,0.1)' }}>
-                <Typography variant="h6" gutterBottom>
-                  Top 5 câu hỏi được xem nhiều nhất
-                </Typography>
-                {getTopQuestions().map((item, index) => (
-                  <Accordion key={item.id} sx={{ mb: 1 }}>
-                    <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                      <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%' }}>
-                        <Chip label={`#${index + 1}`} size="small" color="primary" />
-                        <Typography sx={{ flexGrow: 1 }}>{item.question}</Typography>
-                        <Typography variant="body2" color="text.secondary">
-                          {item.views} lượt xem
-                        </Typography>
-                      </Stack>
-                    </AccordionSummary>
-                    <AccordionDetails>
-                      <Typography variant="body2" color="text.secondary">
-                        <strong>Danh mục:</strong> {item.category}<br />
-                        <strong>Tỉ lệ hữu ích:</strong> {getHelpfulnessRate(item)}%<br />
-                        <strong>Cập nhật cuối:</strong> {formatDate(item.updatedAt)}
-                      </Typography>
-                    </AccordionDetails>
-                  </Accordion>
-                ))}
-              </Paper>
-            </Stack>
-          </Box>
-        )}
-      </Paper>
-
-      {/* View Item Dialog */}
+              </TableContainer>
+        </Box>
+      </Paper>      {/* View Item Dialog */}
       <Dialog open={isViewDialogOpen} onClose={() => setIsViewDialogOpen(false)} maxWidth="md" fullWidth>
         <DialogTitle>Chi tiết Q&A</DialogTitle>
         <DialogContent>

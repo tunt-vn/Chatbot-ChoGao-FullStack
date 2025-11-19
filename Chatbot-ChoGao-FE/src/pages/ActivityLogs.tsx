@@ -1,3 +1,4 @@
+//activity-logs
 import { useState, useEffect } from 'react'
 import * as React from 'react'
 import {
@@ -14,24 +15,17 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  Tabs,
-  Tab,
-  Card,
-  CardContent,
   Avatar,
-  List,
-  ListItem,
-  ListItemAvatar,
-  ListItemText,
   Grid,
-  Alert,
-  Accordion,
-  AccordionSummary,
-  AccordionDetails,
   Dialog,
   DialogTitle,
   DialogContent,
-  DialogActions
+  DialogActions,
+  Card,
+  CardContent,
+  Accordion,
+  AccordionSummary,
+  AccordionDetails
 } from '@mui/material'
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider'
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns'
@@ -44,12 +38,12 @@ import LogoutIcon from '@mui/icons-material/esm/Logout'
 import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
 import AddIcon from '@mui/icons-material/esm/Add'
-import ExpandMoreIcon from '@mui/icons-material/esm/ExpandMore'
 import ErrorIcon from '@mui/icons-material/esm/Error'
 import WarningIcon from '@mui/icons-material/esm/Warning'
 import InfoIcon from '@mui/icons-material/esm/Info'
 import VisibilityIcon from '@mui/icons-material/esm/Visibility'
 import ReportIcon from '@mui/icons-material/esm/Report'
+import ExpandMoreIcon from '@mui/icons-material/esm/ExpandMore'
 import { useNavigate } from 'react-router-dom'
 import { vi } from 'date-fns/locale'
 import type { Role } from '../types/roles'
@@ -57,6 +51,7 @@ import { RoleLabels, RoleColors } from '../types/roles'
 import AdminFilter from '../components/AdminFilter'
 import type { FilterField } from '../components/AdminFilter'
 import ActionDropdown from '../components/ActionDropdown'
+import StatisticsCards, { ActivityLogStats } from '../components/StatisticsCards'
 
 interface ActivityLog {
   id: string
@@ -299,7 +294,6 @@ export default function ActivityLogs() {
   })
   const [dateFrom, setDateFrom] = useState<Date | null>(null)
   const [dateTo, setDateTo] = useState<Date | null>(null)
-  const [tabValue, setTabValue] = useState(0)
   const [isRefreshing, setIsRefreshing] = useState(false)
   const [isViewDetailOpen, setIsViewDetailOpen] = useState(false)
   const [selectedLog, setSelectedLog] = useState<ActivityLog | null>(null)
@@ -346,37 +340,6 @@ export default function ActivityLogs() {
       minute: '2-digit',
       second: '2-digit'
     })
-  }
-
-  const getUniqueRoles = () => {
-    const roles = [...new Set(logs.map(log => log.userRole))]
-    return roles.filter(role => role)
-  }
-
-  const getRecentActivity = () => {
-    return logs
-      .filter(log => log.level !== 'error')
-      .slice(0, 10)
-  }
-
-  const getErrorLogs = () => {
-    return logs.filter(log => log.level === 'error')
-  }
-
-  const getActivityStats = () => {
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-    
-    const todayLogs = logs.filter(log => new Date(log.timestamp) >= today)
-    const errorCount = logs.filter(log => log.level === 'error').length
-    const warningCount = logs.filter(log => log.level === 'warning').length
-    
-    return {
-      totalToday: todayLogs.length,
-      totalErrors: errorCount,
-      totalWarnings: warningCount,
-      totalLogs: logs.length
-    }
   }
 
   const exportLogs = () => {
@@ -427,7 +390,8 @@ export default function ActivityLogs() {
     setIsViewDetailOpen(true)
   }
 
-  const stats = getActivityStats()
+  // Get unique roles for filter
+  const uniqueRoles = [...new Set(logs.map(log => log.userRole))].filter(Boolean)
 
   // Filter fields configuration
   const filterFields: FilterField[] = [
@@ -454,7 +418,7 @@ export default function ActivityLogs() {
       label: 'Vai trò',
       options: [
         { value: 'all', label: 'Tất cả' },
-        ...getUniqueRoles().map(role => ({
+        ...uniqueRoles.map(role => ({
           value: role,
           label: RoleLabels[role as Role] || (role === 'system' ? 'Hệ thống' : role)
         }))
@@ -539,78 +503,34 @@ export default function ActivityLogs() {
           </Typography>
         </Box>
 
-        {/* Stats Cards */}
-        <Grid container spacing={2}>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ bgcolor: 'primary.main', color: 'white' }}>
-              <CardContent>
-                <Typography variant="h4">{stats.totalToday}</Typography>
-                <Typography variant="body2">Hoạt động hôm nay</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ bgcolor: 'error.main', color: 'white' }}>
-              <CardContent>
-                <Typography variant="h4">{stats.totalErrors}</Typography>
-                <Typography variant="body2">Lỗi hệ thống</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ bgcolor: 'warning.main', color: 'white' }}>
-              <CardContent>
-                <Typography variant="h4">{stats.totalWarnings}</Typography>
-                <Typography variant="body2">Cảnh báo</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-          <Grid item xs={12} sm={6} md={3}>
-            <Card sx={{ bgcolor: 'success.main', color: 'white' }}>
-              <CardContent>
-                <Typography variant="h4">{stats.totalLogs}</Typography>
-                <Typography variant="body2">Tổng nhật ký</Typography>
-              </CardContent>
-            </Card>
-          </Grid>
-        </Grid>
+        {/* Statistics Cards */}
+        <StatisticsCards cards={ActivityLogStats(logs)} />
 
-        {/* Tabs */}
+        {/* Main Content */}
         <Paper sx={{ borderRadius: 2 }}>
-          <Tabs
-            value={tabValue}
-            onChange={(_, newValue) => setTabValue(newValue)}
-            sx={{ borderBottom: 1, borderColor: 'divider' }}
-          >
-            <Tab label="Tất cả nhật ký" />
-            <Tab label="Lỗi & Cảnh báo" />
-            <Tab label="Hoạt động gần đây" />
-          </Tabs>
-
-          {tabValue === 0 && (
-            <Box sx={{ p: 3 }}>
-              {/* Filter Controls */}
-              <AdminFilter
-                searchPlaceholder="Tìm kiếm theo hành động, người dùng, mô tả..."
-                searchValue={searchTerm}
-                onSearchChange={setSearchTerm}
-                filterFields={filterFields}
-                filterValues={filterValues}
-                onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
-                dateRangeFilter={dateRangeFilter}
-                dateValues={{ from: dateFrom, to: dateTo }}
-                onDateChange={(key, value) => {
-                  if (key === 'from') setDateFrom(value)
-                  else setDateTo(value)
-                }}
-                showAddButton={false}
-                customButtons={customButtons}
-                onClearFilters={() => {
-                  setFilterValues({ module: 'all', level: 'all', role: 'all' })
-                  setDateFrom(null)
-                  setDateTo(null)
-                }}
-              />
+          <Box sx={{ p: 3 }}>
+            {/* Filter Controls */}
+            <AdminFilter
+              searchPlaceholder="Tìm kiếm theo hành động, người dùng, mô tả..."
+              searchValue={searchTerm}
+              onSearchChange={setSearchTerm}
+              filterFields={filterFields}
+              filterValues={filterValues}
+              onFilterChange={(key, value) => setFilterValues(prev => ({ ...prev, [key]: value }))}
+              dateRangeFilter={dateRangeFilter}
+              dateValues={{ from: dateFrom, to: dateTo }}
+              onDateChange={(key, value) => {
+                if (key === 'from') setDateFrom(value)
+                else setDateTo(value)
+              }}
+              showAddButton={false}
+              customButtons={customButtons}
+              onClearFilters={() => {
+                setFilterValues({ module: 'all', level: 'all', role: 'all' })
+                setDateFrom(null)
+                setDateTo(null)
+              }}
+            />
 
               {/* Logs Table */}
               <TableContainer component={Paper} variant="outlined">
@@ -770,100 +690,7 @@ export default function ActivityLogs() {
                   }
                 />
               </TableContainer>
-            </Box>
-          )}
-
-          {tabValue === 1 && (
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Lỗi và cảnh báo hệ thống
-              </Typography>
-              
-              {getErrorLogs().length === 0 ? (
-                <Alert severity="success">Không có lỗi nào được ghi nhận!</Alert>
-              ) : (
-                <Stack spacing={2}>
-                  {getErrorLogs().map((log) => {
-                    const LevelIcon = levelIcons[log.level]
-                    return (
-                      <Accordion key={log.id}>
-                        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                          <Stack direction="row" spacing={2} alignItems="center" sx={{ width: '100%' }}>
-                            <LevelIcon color={log.level} />
-                            <Typography sx={{ flexGrow: 1 }}>{log.details}</Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {formatDate(log.timestamp)}
-                            </Typography>
-                          </Stack>
-                        </AccordionSummary>
-                        <AccordionDetails>
-                          <Stack spacing={1}>
-                            <Typography variant="body2">
-                              <strong>Người dùng:</strong> {log.userName} ({log.userRole === 'system' ? 'Hệ thống' : (RoleLabels[log.userRole as Role] || log.userRole)})
-                            </Typography>
-                            <Typography variant="body2">
-                              <strong>Hành động:</strong> {actionLabels[log.action] || log.action}
-                            </Typography>
-                            <Typography variant="body2">
-                              <strong>Module:</strong> {moduleLabels[log.module]}
-                            </Typography>
-                            <Typography variant="body2">
-                              <strong>IP Address:</strong> {log.ipAddress}
-                            </Typography>
-                            <Typography variant="body2" sx={{ fontFamily: 'monospace', fontSize: '0.8rem', bgcolor: 'grey.100', p: 1, borderRadius: 1 }}>
-                              {log.userAgent}
-                            </Typography>
-                          </Stack>
-                        </AccordionDetails>
-                      </Accordion>
-                    )
-                  })}
-                </Stack>
-              )}
-            </Box>
-          )}
-
-          {tabValue === 2 && (
-            <Box sx={{ p: 3 }}>
-              <Typography variant="h6" gutterBottom>
-                Hoạt động gần đây
-              </Typography>
-              <List>
-                {getRecentActivity().map((log, index) => {
-                  const ActionIcon = getActionIcon(log.action)
-                  return (
-                    <ListItem key={log.id} divider={index < getRecentActivity().length - 1}>
-                      <ListItemAvatar>
-                        <Avatar sx={{ bgcolor: 'primary.main' }}>
-                          <ActionIcon />
-                        </Avatar>
-                      </ListItemAvatar>
-                      <ListItemText
-                        primary={
-                          <Stack direction="row" spacing={1} alignItems="center">
-                            <Typography variant="subtitle2">
-                              {log.userName}
-                            </Typography>
-                            <Typography variant="body2" color="text.secondary">
-                              {actionLabels[log.action] || log.action}
-                            </Typography>
-                          </Stack>
-                        }
-                        secondary={
-                          <Stack spacing={0.5}>
-                            <Typography variant="body2">{log.details}</Typography>
-                            <Typography variant="caption" color="text.secondary">
-                              {formatDate(log.timestamp)} • {log.ipAddress}
-                            </Typography>
-                          </Stack>
-                        }
-                      />
-                    </ListItem>
-                  )
-                })}
-              </List>
-            </Box>
-          )}
+          </Box>
         </Paper>
 
         {/* View Detail Dialog */}
