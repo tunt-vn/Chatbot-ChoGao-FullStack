@@ -14,7 +14,6 @@ import {
   TableRow,
   TablePagination,
   Avatar,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -26,18 +25,21 @@ import {
   MenuItem,
   Alert,
   Snackbar,
-  Tooltip,
   Tabs,
   Tab
 } from '@mui/material'
 import PeopleIcon from '@mui/icons-material/esm/People'
 import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
+import VisibilityIcon from '@mui/icons-material/esm/Visibility'
+import BlockIcon from '@mui/icons-material/esm/Block'
+import CheckCircleIcon from '@mui/icons-material/esm/CheckCircle'
 import { useNavigate } from 'react-router-dom'
 import type { Role } from '../types/roles'
 import { RoleLabels, RoleColors } from '../types/roles'
 import AdminFilter from '../components/AdminFilter'
 import type { FilterField } from '../components/AdminFilter'
+import ActionDropdown from '../components/ActionDropdown'
 
 interface User {
   id: string
@@ -356,25 +358,50 @@ export default function UserManagement() {
                           {formatDate(user.lastLogin)}
                         </TableCell>
                         <TableCell align="center">
-                          <Stack direction="row" spacing={1} justifyContent="center">
-                            <Tooltip title="Chỉnh sửa">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEditUser(user)}
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Xóa">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleDeleteUser(user)}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
+                          <ActionDropdown
+                            actions={[
+                              {
+                                id: 'view',
+                                label: 'Xem hồ sơ',
+                                icon: <VisibilityIcon fontSize="small" />,
+                                color: 'primary',
+                                onClick: () => console.log('View user', user.id)
+                              },
+                              {
+                                id: 'edit',
+                                label: 'Chỉnh sửa',
+                                icon: <EditIcon fontSize="small" />,
+                                onClick: () => handleEditUser(user)
+                              },
+                              {
+                                id: 'block',
+                                label: user.status === 'active' ? 'Chặn người dùng' : 'Bỏ chặn',
+                                icon: user.status === 'active' ? 
+                                  <BlockIcon fontSize="small" /> : 
+                                  <CheckCircleIcon fontSize="small" />,
+                                color: user.status === 'active' ? 'error' : 'success',
+                                onClick: () => {
+                                  const newStatus = user.status === 'active' ? 'inactive' : 'active'
+                                  setUsers(users.map(u => 
+                                    u.id === user.id ? { ...u, status: newStatus } : u
+                                  ))
+                                  setSnackbar({ 
+                                    open: true, 
+                                    message: user.status === 'active' ? 'Đã chặn người dùng' : 'Đã bỏ chặn người dùng', 
+                                    severity: 'success' 
+                                  })
+                                },
+                                divider: true
+                              },
+                              {
+                                id: 'delete',
+                                label: 'Xóa người dùng',
+                                icon: <DeleteIcon fontSize="small" />,
+                                color: 'error',
+                                onClick: () => handleDeleteUser(user)
+                              }
+                            ]}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

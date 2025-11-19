@@ -23,8 +23,6 @@ import {
   ListItem,
   ListItemAvatar,
   ListItemText,
-  IconButton,
-  Tooltip,
   Grid,
   Alert,
   Accordion,
@@ -51,12 +49,14 @@ import ErrorIcon from '@mui/icons-material/esm/Error'
 import WarningIcon from '@mui/icons-material/esm/Warning'
 import InfoIcon from '@mui/icons-material/esm/Info'
 import VisibilityIcon from '@mui/icons-material/esm/Visibility'
+import ReportIcon from '@mui/icons-material/esm/Report'
 import { useNavigate } from 'react-router-dom'
 import { vi } from 'date-fns/locale'
 import type { Role } from '../types/roles'
 import { RoleLabels, RoleColors } from '../types/roles'
 import AdminFilter from '../components/AdminFilter'
 import type { FilterField } from '../components/AdminFilter'
+import ActionDropdown from '../components/ActionDropdown'
 
 interface ActivityLog {
   id: string
@@ -700,15 +700,55 @@ export default function ActivityLogs() {
                               </Typography>
                             </TableCell>
                             <TableCell align="center">
-                              <Tooltip title="Xem chi tiết">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleViewDetail(log)}
-                                  sx={{ color: 'primary.main' }}
-                                >
-                                  <VisibilityIcon />
-                                </IconButton>
-                              </Tooltip>
+                              <ActionDropdown
+                                actions={[
+                                  {
+                                    id: 'view',
+                                    label: 'Xem chi tiết',
+                                    icon: <VisibilityIcon fontSize="small" />,
+                                    color: 'primary',
+                                    onClick: () => handleViewDetail(log)
+                                  },
+                                  {
+                                    id: 'export',
+                                    label: 'Xuất log này',
+                                    icon: <DownloadIcon fontSize="small" />,
+                                    onClick: () => {
+                                      const csvContent = [
+                                        ['Thời gian', 'Người dùng', 'Hành động', 'Mô tả', 'Mức độ', 'IP Address'].join(','),
+                                        [
+                                          formatDate(log.timestamp),
+                                          log.userName,
+                                          actionLabels[log.action] || log.action,
+                                          log.details,
+                                          levelLabels[log.level],
+                                          log.ipAddress
+                                        ].join(',')
+                                      ].join('\n')
+                                      
+                                      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+                                      const link = document.createElement('a')
+                                      const url = URL.createObjectURL(blob)
+                                      link.setAttribute('href', url)
+                                      link.setAttribute('download', `activity-log-${log.id}.csv`)
+                                      link.style.visibility = 'hidden'
+                                      document.body.appendChild(link)
+                                      link.click()
+                                      document.body.removeChild(link)
+                                    }
+                                  },
+                                  ...(log.level === 'error' ? [{
+                                    id: 'report',
+                                    label: 'Báo cáo lỗi',
+                                    icon: <ReportIcon fontSize="small" />,
+                                    color: 'error' as const,
+                                    onClick: () => {
+                                      // Add error reporting logic
+                                      console.log('Report error', log.id)
+                                    }
+                                  }] : [])
+                                ]}
+                              />
                             </TableCell>
                           </TableRow>
                         )

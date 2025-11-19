@@ -13,7 +13,6 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -25,7 +24,6 @@ import {
   MenuItem,
   Alert,
   Snackbar,
-  Tooltip,
   Tabs,
   Tab,
   Accordion,
@@ -37,9 +35,11 @@ import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
 import ExpandMoreIcon from '@mui/icons-material/esm/ExpandMore'
 import VisibilityIcon from '@mui/icons-material/esm/Visibility'
+import VisibilityOffIcon from '@mui/icons-material/esm/VisibilityOff'
 import { useNavigate } from 'react-router-dom'
 import AdminFilter from '../components/AdminFilter'
 import type { FilterField } from '../components/AdminFilter'
+import ActionDropdown from '../components/ActionDropdown'
 
 interface QAItem {
   id: string
@@ -438,33 +438,50 @@ export default function QAManagement() {
                         <TableCell>{item.views}</TableCell>
                         <TableCell>{getHelpfulnessRate(item)}%</TableCell>
                         <TableCell align="center">
-                          <Stack direction="row" spacing={1} justifyContent="center">
-                            <Tooltip title="Xem chi tiết">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleViewItem(item)}
-                              >
-                                <VisibilityIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Chỉnh sửa">
-                              <IconButton
-                                size="small"
-                                onClick={() => handleEditItem(item)}
-                              >
-                                <EditIcon />
-                              </IconButton>
-                            </Tooltip>
-                            <Tooltip title="Xóa">
-                              <IconButton
-                                size="small"
-                                color="error"
-                                onClick={() => handleDeleteItem(item)}
-                              >
-                                <DeleteIcon />
-                              </IconButton>
-                            </Tooltip>
-                          </Stack>
+                          <ActionDropdown
+                            actions={[
+                              {
+                                id: 'view',
+                                label: 'Xem chi tiết',
+                                icon: <VisibilityIcon fontSize="small" />,
+                                color: 'primary',
+                                onClick: () => handleViewItem(item)
+                              },
+                              {
+                                id: 'edit',
+                                label: 'Chỉnh sửa',
+                                icon: <EditIcon fontSize="small" />,
+                                onClick: () => handleEditItem(item)
+                              },
+                              {
+                                id: 'toggle',
+                                label: item.status === 'active' ? 'Ẩn Q&A' : 'Hiển thị Q&A',
+                                icon: item.status === 'active' ? 
+                                  <VisibilityOffIcon fontSize="small" /> : 
+                                  <VisibilityIcon fontSize="small" />,
+                                color: item.status === 'active' ? 'warning' : 'success',
+                                onClick: () => {
+                                  const newStatus = item.status === 'active' ? 'inactive' : 'active'
+                                  setQaItems(qaItems.map(qa => 
+                                    qa.id === item.id ? { ...qa, status: newStatus, updatedAt: new Date().toISOString() } : qa
+                                  ))
+                                  setSnackbar({ 
+                                    open: true, 
+                                    message: item.status === 'active' ? 'Đã ẩn Q&A' : 'Đã hiển thị Q&A', 
+                                    severity: 'success' 
+                                  })
+                                },
+                                divider: true
+                              },
+                              {
+                                id: 'delete',
+                                label: 'Xóa Q&A',
+                                icon: <DeleteIcon fontSize="small" />,
+                                color: 'error',
+                                onClick: () => handleDeleteItem(item)
+                              }
+                            ]}
+                          />
                         </TableCell>
                       </TableRow>
                     ))}

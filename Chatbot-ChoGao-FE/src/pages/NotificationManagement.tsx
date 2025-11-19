@@ -13,7 +13,6 @@ import {
   TableHead,
   TableRow,
   TablePagination,
-  IconButton,
   Dialog,
   DialogTitle,
   DialogContent,
@@ -25,7 +24,6 @@ import {
   MenuItem,
   Alert,
   Snackbar,
-  Tooltip,
   Tabs,
   Tab,
   Switch,
@@ -44,12 +42,15 @@ import EditIcon from '@mui/icons-material/esm/Edit'
 import DeleteIcon from '@mui/icons-material/esm/Delete'
 import SendIcon from '@mui/icons-material/esm/Send'
 import AnnouncementIcon from '@mui/icons-material/esm/Announcement'
+import VisibilityIcon from '@mui/icons-material/esm/Visibility'
+import ContentCopyIcon from '@mui/icons-material/esm/ContentCopy'
 import { useNavigate } from 'react-router-dom'
 import { vi } from 'date-fns/locale'
 import type { Recipients } from '../types/roles'
 import { RecipientLabels } from '../types/roles'
 import AdminFilter from '../components/AdminFilter'
 import type { FilterField } from '../components/AdminFilter'
+import ActionDropdown from '../components/ActionDropdown'
 
 interface Notification {
   id: string
@@ -514,38 +515,62 @@ export default function NotificationManagement() {
                             </Typography>
                           </TableCell>
                           <TableCell align="center">
-                            <Stack direction="row" spacing={1} justifyContent="center">
-                              {notification.status === 'draft' && (
-                                <Tooltip title="Gửi ngay">
-                                  <IconButton
-                                    size="small"
-                                    color="success"
-                                    onClick={() => handleSendNow(notification)}
-                                  >
-                                    <SendIcon />
-                                  </IconButton>
-                                </Tooltip>
-                              )}
-                              <Tooltip title="Chỉnh sửa">
-                                <IconButton
-                                  size="small"
-                                  onClick={() => handleEditNotification(notification)}
-                                  disabled={notification.status === 'sent'}
-                                >
-                                  <EditIcon />
-                                </IconButton>
-                              </Tooltip>
-                              <Tooltip title="Xóa">
-                                <IconButton
-                                  size="small"
-                                  color="error"
-                                  onClick={() => handleDeleteNotification(notification)}
-                                  disabled={notification.status === 'sent'}
-                                >
-                                  <DeleteIcon />
-                                </IconButton>
-                              </Tooltip>
-                            </Stack>
+                            <ActionDropdown
+                              actions={[
+                                {
+                                  id: 'view',
+                                  label: 'Xem chi tiết',
+                                  icon: <VisibilityIcon fontSize="small" />,
+                                  color: 'primary',
+                                  onClick: () => {
+                                    // Add view details logic here
+                                    console.log('View notification details', notification.id)
+                                  }
+                                },
+                                ...(notification.status === 'draft' ? [{
+                                  id: 'send',
+                                  label: 'Gửi ngay',
+                                  icon: <SendIcon fontSize="small" />,
+                                  color: 'success' as const,
+                                  onClick: () => handleSendNow(notification)
+                                }] : []),
+                                {
+                                  id: 'edit',
+                                  label: 'Chỉnh sửa',
+                                  icon: <EditIcon fontSize="small" />,
+                                  disabled: notification.status === 'sent',
+                                  onClick: () => handleEditNotification(notification)
+                                },
+                                {
+                                  id: 'duplicate',
+                                  label: 'Tạo bản sao',
+                                  icon: <ContentCopyIcon fontSize="small" />,
+                                  onClick: () => {
+                                    const duplicated: Notification = {
+                                      ...notification,
+                                      id: String(Date.now()),
+                                      title: `${notification.title} (Bản sao)`,
+                                      status: 'draft',
+                                      createdAt: new Date().toISOString(),
+                                      sentAt: undefined,
+                                      scheduledAt: undefined,
+                                      readCount: 0
+                                    }
+                                    setNotifications([duplicated, ...notifications])
+                                    setSnackbar({ open: true, message: 'Đã tạo bản sao thông báo', severity: 'success' })
+                                  },
+                                  divider: true
+                                },
+                                {
+                                  id: 'delete',
+                                  label: 'Xóa thông báo',
+                                  icon: <DeleteIcon fontSize="small" />,
+                                  color: 'error',
+                                  disabled: notification.status === 'sent',
+                                  onClick: () => handleDeleteNotification(notification)
+                                }
+                              ]}
+                            />
                           </TableCell>
                         </TableRow>
                       ))}
