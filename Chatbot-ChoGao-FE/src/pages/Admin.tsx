@@ -15,7 +15,7 @@ export default function Admin() {
       icon: <AnalyticsIcon color="primary" />,
       title: 'Báo cáo & Thống kê',
       description: 'Phân tích mức độ sử dụng, lượt câu hỏi phổ biến và chất lượng phản hồi của trợ lý.',
-      action: () => console.log('Coming soon'),
+      action: () => navigate('/admin/dashboard'),
       buttonText: 'Khám phá thêm'
     },
     {

@@ -10,6 +10,7 @@ import ChatWindow from './components/ChatWindow'
 import FAQ from './pages/FAQ'
 import Schedule from './pages/Schedule'
 import Admin from './pages/Admin'
+import Dashboard from './pages/Dashboard'
 import UserManagement from './pages/UserManagement'
 import QAManagement from './pages/QAManagement'
 import NotificationManagement from './pages/NotificationManagement'
@@ -53,6 +54,14 @@ export default function App() {
                 element={
                   <ProtectedRoute>
                     <Admin />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="admin/dashboard"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard />
                   </ProtectedRoute>
                 }
               />
