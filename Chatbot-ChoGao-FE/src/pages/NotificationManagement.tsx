@@ -192,6 +192,7 @@ export default function NotificationManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
 
   // New notification form state
@@ -256,6 +257,11 @@ export default function NotificationManagement() {
   const handleChangeRowsPerPage = (event: React.ChangeEvent<HTMLInputElement>) => {
     setRowsPerPage(parseInt(event.target.value, 10))
     setPage(0)
+  }
+
+  const handleViewNotification = (notification: Notification) => {
+    setSelectedNotification(notification)
+    setIsViewDialogOpen(true)
   }
 
   const handleEditNotification = (notification: Notification) => {
@@ -501,10 +507,7 @@ export default function NotificationManagement() {
                                   label: 'Xem chi tiết',
                                   icon: <VisibilityIcon fontSize="small" />,
                                   color: 'primary',
-                                  onClick: () => {
-                                    // Add view details logic here
-                                    console.log('View notification details', notification.id)
-                                  }
+                                  onClick: () => handleViewNotification(notification)
                                 },
                                 ...(notification.status === 'draft' ? [{
                                   id: 'send',
@@ -572,6 +575,207 @@ export default function NotificationManagement() {
               </TableContainer>
           </Box>
         </Paper>
+
+        {/* View Notification Dialog */}
+        <Dialog open={isViewDialogOpen} onClose={() => setIsViewDialogOpen(false)} maxWidth="lg" fullWidth>
+          <DialogTitle>
+            <Stack direction="row" alignItems="center" spacing={2}>
+              <NotificationsIcon color="primary" />
+              <Box>
+                <Typography variant="h6">Chi tiết thông báo</Typography>
+                <Typography variant="body2" color="text.secondary">
+                  {selectedNotification && formatDate(selectedNotification.createdAt)}
+                </Typography>
+              </Box>
+            </Stack>
+          </DialogTitle>
+          <DialogContent>
+            {selectedNotification && (
+              <Stack spacing={3} sx={{ mt: 1 }}>
+                {/* Title and Content */}
+                <Paper sx={{ p: 3, bgcolor: 'grey.50' }}>
+                  <Typography variant="h5" gutterBottom>
+                    {selectedNotification.title}
+                  </Typography>
+                  <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', lineHeight: 1.6 }}>
+                    {selectedNotification.content}
+                  </Typography>
+                </Paper>
+
+                {/* Basic Info */}
+                <Paper sx={{ p: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Thông tin cơ bản
+                  </Typography>
+                  <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+                    <Box sx={{ flex: 1 }}>
+                      <Stack spacing={2}>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Loại thông báo
+                          </Typography>
+                          <Box sx={{ mt: 0.5 }}>
+                            <Chip
+                              label={typeLabels[selectedNotification.type]}
+                              size="small"
+                              color={typeColors[selectedNotification.type]}
+                            />
+                          </Box>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Độ ưu tiên
+                          </Typography>
+                          <Box sx={{ mt: 0.5 }}>
+                            <Chip
+                              label={priorityLabels[selectedNotification.priority]}
+                              size="small"
+                              color={priorityColors[selectedNotification.priority]}
+                            />
+                          </Box>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Trạng thái
+                          </Typography>
+                          <Box sx={{ mt: 0.5 }}>
+                            <Chip
+                              label={statusLabels[selectedNotification.status]}
+                              size="small"
+                              color={statusColors[selectedNotification.status]}
+                            />
+                          </Box>
+                        </Box>
+                      </Stack>
+                    </Box>
+                    <Box sx={{ flex: 1 }}>
+                      <Stack spacing={2}>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Đối tượng
+                          </Typography>
+                          <Typography variant="body1">
+                            {recipientLabels[selectedNotification.recipients]}
+                          </Typography>
+                          <Typography variant="caption" color="text.secondary">
+                            {selectedNotification.totalRecipients} người
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            Tác giả
+                          </Typography>
+                          <Typography variant="body1">
+                            {selectedNotification.author}
+                          </Typography>
+                        </Box>
+                        <Box>
+                          <Typography variant="caption" color="text.secondary">
+                            ID thông báo
+                          </Typography>
+                          <Typography variant="body1" sx={{ fontFamily: 'monospace', fontSize: '0.9em' }}>
+                            {selectedNotification.id}
+                          </Typography>
+                        </Box>
+                      </Stack>
+                    </Box>
+                  </Stack>
+                </Paper>
+
+                {/* Timeline Info */}
+                <Paper sx={{ p: 3 }}>
+                  <Typography variant="h6" gutterBottom>
+                    Lịch sử hoạt động
+                  </Typography>
+                  <Stack spacing={2}>
+                    <Box>
+                      <Typography variant="caption" color="text.secondary">
+                        Ngày tạo
+                      </Typography>
+                      <Typography variant="body1">
+                        {formatDate(selectedNotification.createdAt)}
+                      </Typography>
+                    </Box>
+                    {selectedNotification.scheduledAt && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Lên lịch gửi
+                        </Typography>
+                        <Typography variant="body1">
+                          {formatDate(selectedNotification.scheduledAt)}
+                        </Typography>
+                      </Box>
+                    )}
+                    {selectedNotification.sentAt && (
+                      <Box>
+                        <Typography variant="caption" color="text.secondary">
+                          Đã gửi
+                        </Typography>
+                        <Typography variant="body1">
+                          {formatDate(selectedNotification.sentAt)}
+                        </Typography>
+                      </Box>
+                    )}
+                  </Stack>
+                </Paper>
+
+                {/* Statistics */}
+                {selectedNotification.status === 'sent' && (
+                  <Paper sx={{ p: 3 }}>
+                    <Typography variant="h6" gutterBottom>
+                      Thống kê
+                    </Typography>
+                    <Stack direction={{ xs: 'column', md: 'row' }} spacing={3}>
+                      <Box sx={{ flex: 1, textAlign: 'center', p: 2, bgcolor: 'primary.50', borderRadius: 2 }}>
+                        <Typography variant="h4" color="primary.main">
+                          {getReadRate(selectedNotification)}%
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Tỷ lệ đọc
+                        </Typography>
+                      </Box>
+                      <Box sx={{ flex: 1, textAlign: 'center', p: 2, bgcolor: 'success.50', borderRadius: 2 }}>
+                        <Typography variant="h4" color="success.main">
+                          {selectedNotification.readCount}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Đã đọc
+                        </Typography>
+                      </Box>
+                      <Box sx={{ flex: 1, textAlign: 'center', p: 2, bgcolor: 'warning.50', borderRadius: 2 }}>
+                        <Typography variant="h4" color="warning.main">
+                          {selectedNotification.totalRecipients - selectedNotification.readCount}
+                        </Typography>
+                        <Typography variant="body2" color="text.secondary">
+                          Chưa đọc
+                        </Typography>
+                      </Box>
+                    </Stack>
+                  </Paper>
+                )}
+              </Stack>
+            )}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={() => setIsViewDialogOpen(false)}>
+              Đóng
+            </Button>
+            {selectedNotification && selectedNotification.status !== 'sent' && (
+              <Button 
+                onClick={() => {
+                  setIsViewDialogOpen(false)
+                  if (selectedNotification) {
+                    handleEditNotification(selectedNotification)
+                  }
+                }} 
+                variant="contained"
+                startIcon={<EditIcon />}
+              >
+                Chỉnh sửa
+              </Button>
+            )}
+          </DialogActions>
+        </Dialog>
 
         {/* Add Notification Dialog */}
         <Dialog open={isAddDialogOpen} onClose={() => setIsAddDialogOpen(false)} maxWidth="md" fullWidth>

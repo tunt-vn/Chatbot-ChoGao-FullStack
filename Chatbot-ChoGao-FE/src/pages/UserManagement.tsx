@@ -128,6 +128,7 @@ export default function UserManagement() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false)
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false)
+  const [isViewDialogOpen, setIsViewDialogOpen] = useState(false)
   const [snackbar, setSnackbar] = useState({ open: false, message: '', severity: 'success' as 'success' | 'error' })
 
   // New user form state
@@ -191,6 +192,11 @@ export default function UserManagement() {
   const handleEditUser = (user: User) => {
     setSelectedUser(user)
     setIsEditDialogOpen(true)
+  }
+
+  const handleViewUser = (user: User) => {
+    setSelectedUser(user)
+    setIsViewDialogOpen(true)
   }
 
   const handleDeleteUser = (user: User) => {
@@ -358,7 +364,7 @@ export default function UserManagement() {
                                 label: 'Xem hồ sơ',
                                 icon: <VisibilityIcon fontSize="small" />,
                                 color: 'primary',
-                                onClick: () => console.log('View user', user.id)
+                                onClick: () => handleViewUser(user)
                               },
                               {
                                 id: 'edit',
@@ -416,7 +422,127 @@ export default function UserManagement() {
               />
               </TableContainer>
         </Box>
-      </Paper>      {/* Edit User Dialog */}
+      </Paper>      {/* View User Dialog */}
+      <Dialog open={isViewDialogOpen} onClose={() => setIsViewDialogOpen(false)} maxWidth="md" fullWidth>
+        <DialogTitle>
+          <Stack direction="row" alignItems="center" spacing={2}>
+            <Avatar sx={{ bgcolor: 'primary.main', width: 56, height: 56 }}>
+              {selectedUser?.name.charAt(0).toUpperCase()}
+            </Avatar>
+            <Box>
+              <Typography variant="h6">{selectedUser?.name}</Typography>
+              <Typography variant="body2" color="text.secondary">
+                {selectedUser?.email}
+              </Typography>
+            </Box>
+          </Stack>
+        </DialogTitle>
+        <DialogContent>
+          <Grid container spacing={3} sx={{ mt: 1 }}>
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Thông tin cơ bản
+                </Typography>
+                <Stack spacing={2}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Họ tên
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedUser?.name}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Email
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedUser?.email}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Vai trò
+                    </Typography>
+                    <Box sx={{ mt: 0.5 }}>
+                      <Chip
+                        label={selectedUser ? roleLabels[selectedUser.role] : ''}
+                        size="small"
+                        color={selectedUser ? RoleColors[selectedUser.role] : 'default'}
+                      />
+                    </Box>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Trạng thái
+                    </Typography>
+                    <Box sx={{ mt: 0.5 }}>
+                      <Chip
+                        label={selectedUser ? statusLabels[selectedUser.status] : ''}
+                        size="small"
+                        color={selectedUser ? statusColors[selectedUser.status] : 'default'}
+                      />
+                    </Box>
+                  </Box>
+                </Stack>
+              </Paper>
+            </Grid>
+            <Grid item xs={12} md={6}>
+              <Paper sx={{ p: 2, bgcolor: 'grey.50' }}>
+                <Typography variant="subtitle2" color="text.secondary" gutterBottom>
+                  Thông tin hoạt động
+                </Typography>
+                <Stack spacing={2}>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Ngày tạo tài khoản
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedUser ? formatDate(selectedUser.createdAt) : ''}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      Đăng nhập cuối
+                    </Typography>
+                    <Typography variant="body1">
+                      {selectedUser ? formatDate(selectedUser.lastLogin) : ''}
+                    </Typography>
+                  </Box>
+                  <Box>
+                    <Typography variant="caption" color="text.secondary">
+                      ID người dùng
+                    </Typography>
+                    <Typography variant="body1" sx={{ fontFamily: 'monospace', fontSize: '0.9em' }}>
+                      {selectedUser?.id}
+                    </Typography>
+                  </Box>
+                </Stack>
+              </Paper>
+            </Grid>
+          </Grid>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setIsViewDialogOpen(false)}>
+            Đóng
+          </Button>
+          <Button 
+            onClick={() => {
+              setIsViewDialogOpen(false)
+              if (selectedUser) {
+                handleEditUser(selectedUser)
+              }
+            }} 
+            variant="contained"
+            startIcon={<EditIcon />}
+          >
+            Chỉnh sửa
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {/* Edit User Dialog */}
       <Dialog open={isEditDialogOpen} onClose={() => setIsEditDialogOpen(false)} maxWidth="sm" fullWidth>
         <DialogTitle>Chỉnh sửa thông tin người dùng</DialogTitle>
         <DialogContent>
