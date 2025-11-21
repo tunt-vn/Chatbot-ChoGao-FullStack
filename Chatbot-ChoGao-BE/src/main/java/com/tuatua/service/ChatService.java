@@ -38,12 +38,12 @@ public class ChatService {
                 .orElseThrow(() -> new UsernameNotFoundException("Không tìm thấy User với email: " + userEmail));
 
         // 2. Lưu tin nhắn của người dùng vào DB
-        ChatMessage userMessage = new ChatMessage(user, ChatMessage.SenderType.USER, chatRequest.getChatInput());
+        ChatMessage userMessage = new ChatMessage(user, ChatMessage.SenderType.USER, chatRequest.getMessage());
         chatMessageRepository.save(userMessage);
 
         // 3. Chuẩn bị request gửi sang AI Agent
         // Dùng ID của user làm user_id cho AI Agent
-        AiAgentRequest aiRequest = new AiAgentRequest(chatRequest.getChatInput(), String.valueOf(user.getId()));
+        AiAgentRequest aiRequest = new AiAgentRequest(chatRequest.getMessage(), String.valueOf(user.getId()));
 
         String botAnswer = "Xin lỗi, hệ thống đang bận.";
 
