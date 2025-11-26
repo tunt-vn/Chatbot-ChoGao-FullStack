@@ -27,7 +27,6 @@ public class ChatMessage {
     @Column(nullable = false)
     private SenderType sender; // Ai là người gửi: USER hay BOT
 
-    @Lob // Dùng cho cột TEXT trong Postgres để lưu nội dung dài
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
