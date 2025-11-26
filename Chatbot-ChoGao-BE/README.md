@@ -10,7 +10,7 @@ Spring Boot 3 backend for the Mobile app (Expo SDK 54). Provides JWT auth and a 
 ## Getting started
 
 Prerequisites:
-- Java 17+
+- Java 21
 - Maven 3.9+
 
 Setup:
