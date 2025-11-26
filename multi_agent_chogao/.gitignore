@@ -1,0 +1,22 @@
+# Ignore environment files with API keys
+.env
+
+# Ignore per-package envs
+multi_agent/.env
+
+# Ignore service account JSONs (local credentials)
+**/serviceAccountKey.json
+
+# Other local secret key files
+**/.genai_key
+**/genai_api_key.txt
+
+# Python cache & virtual envs
+__pycache__/
+*.py[cod]
+venv/
+.env/
+
+# IDE/project files
+.vscode/
+.idea/

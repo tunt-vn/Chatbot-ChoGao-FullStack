@@ -20,13 +20,14 @@ public class ChatMessage {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY) // Liên kết Many-to-One với Student
-    @JoinColumn(name = "user_id", nullable = false)
+    @JoinColumn(name = "student_id", nullable = false)
     private User user;
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
     private SenderType sender; // Ai là người gửi: USER hay BOT
 
+    @Lob // Dùng cho cột TEXT trong Postgres để lưu nội dung dài
     @Column(nullable = false, columnDefinition = "TEXT")
     private String content;
 
