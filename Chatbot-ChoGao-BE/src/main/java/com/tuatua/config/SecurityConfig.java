@@ -1,32 +1,25 @@
 package com.tuatua.config;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-
 @Configuration
 @EnableWebSecurity
-@RequiredArgsConstructor
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
-    // Thêm các dependency khác nếu cần, ví dụ AuthenticationProvider
 
-    @Bean
-    public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder();
+    public SecurityConfig(@Lazy JwtAuthenticationFilter jwtAuthFilter) {
+        this.jwtAuthFilter = jwtAuthFilter;
     }
 
     @Bean
@@ -41,17 +34,20 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(antMatcher("/api/auth/**")).permitAll() // Endpoint xác thực -> public
+                        .requestMatchers("/api/auth/**").permitAll() // Endpoint xác thực -> public
 
                         // --- VÍ DỤ PHÂN QUYỀN ---
                         // Chỉ ADMIN có thể truy cập
-                        .requestMatchers(antMatcher("/api/admin/**")).hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Cả ADMIN và STAFF đều có thể truy cập
-                        .requestMatchers(antMatcher("/api/staff/**")).hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers("/api/staff/**").hasAnyRole("ADMIN", "STAFF")
+
+                        // CHỈ ADMIN MỚI ĐƯỢC VÀO CÁC API NÀY
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         // Tất cả người dùng đã xác thực (MEMBER, STAFF, ADMIN)
-                        .requestMatchers(antMatcher("/api/chat/**")).authenticated()
+                        .requestMatchers("/api/chat/**").authenticated()
                         // --- KẾT THÚC VÍ DỤ ---
 
                         .anyRequest().authenticated() // Mọi endpoint /api/** khác -> cần xác thực

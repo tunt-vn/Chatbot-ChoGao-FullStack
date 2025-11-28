@@ -1,45 +1,43 @@
 package com.tuatua.controller;
 
 import com.tuatua.dto.ChatRequest;
+import com.tuatua.dto.ChatResponse;
 import com.tuatua.entity.ChatMessage;
-import com.tuatua.service.ChatService; // Import service mới
-import lombok.RequiredArgsConstructor; // Sử dụng constructor injection
+import com.tuatua.service.ChatService;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication; // Sử dụng Authentication thay vì Principal
-import org.springframework.web.bind.annotation.*; // Thêm GetMapping
+import org.springframework.security.core.Authentication;
+import org.springframework.web.bind.annotation.*;
 
-import java.security.Principal;
 import java.util.List;
 
 @RestController
 @RequestMapping("/api/chat")
-@RequiredArgsConstructor // Dùng constructor injection
+@RequiredArgsConstructor
 public class ChatController {
 
-    private final ChatService chatService; // Tiêm ChatService
-    // Xóa RestTemplate và @Value n8nWebhookUrl ở đây
+    private final ChatService chatService;
 
     /**
-     * Endpoint để gửi tin nhắn mới đến bot.
+     * Endpoint gửi tin nhắn: Gọi tới Google ADK AI Agent
      */
     @PostMapping
-    public ResponseEntity<?> chatWithBot(@RequestBody ChatRequest chatRequest, Authentication authentication) {
-        // Lấy email của người dùng đã xác thực từ đối tượng Authentication
+    public ResponseEntity<ChatResponse> chatWithBot(@RequestBody ChatRequest chatRequest, Authentication authentication) {
         String userEmail = authentication.getName();
 
         try {
-            // Gọi ChatService để xử lý
+            // Logic xử lý đã được chuyển hết vào Service
             String botResponse = chatService.processUserMessage(userEmail, chatRequest);
-            // Trả về phản hồi của bot
-            return ResponseEntity.ok(botResponse);
+            return ResponseEntity.ok(new ChatResponse(true, botResponse));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Error processing chat message: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                .body(new ChatResponse(false, "Lỗi khi xử lý tin nhắn: " + e.getMessage()));
         }
     }
 
     /**
-     * Endpoint để lấy lịch sử chat của người dùng hiện tại.
+     * Lấy lịch sử chat
      */
     @GetMapping("/history")
     public ResponseEntity<List<ChatMessage>> getChatHistory(Authentication authentication) {
@@ -48,8 +46,7 @@ public class ChatController {
             List<ChatMessage> history = chatService.getChatHistory(userEmail);
             return ResponseEntity.ok(history);
         } catch (Exception e) {
-            e.printStackTrace();
-            return ResponseEntity.internalServerError().body(null); // Hoặc trả về lỗi cụ thể hơn
+            return ResponseEntity.internalServerError().build();
         }
     }
 }

@@ -189,10 +189,63 @@ export const userApi = {
   },
 };
 
+/**
+ * Calendar Event Interface
+ */
+export interface CalendarEvent {
+  id: number;
+  title: string;
+  description: string;
+  startTime: string;
+  endTime: string;
+  eventType: string;
+  location?: string;
+  targetAudience: string;
+  subject?: string;
+  teacherName?: string;
+  className?: string;
+  isRecurring: boolean;
+  recurringPattern?: string;
+}
+
+/**
+ * Calendar API calls
+ */
+export const calendarApi = {
+  getAllEvents: async (): Promise<CalendarEvent[]> => {
+    return apiRequest('/calendar', 'GET', undefined, false);
+  },
+
+  getUpcomingEvents: async (): Promise<CalendarEvent[]> => {
+    return apiRequest('/calendar/upcoming', 'GET', undefined, false);
+  },
+
+  getEventsByAudience: async (audience: string): Promise<CalendarEvent[]> => {
+    return apiRequest(`/calendar/audience/${audience}`, 'GET', undefined, false);
+  },
+
+  getEventsBetween: async (start: string, end: string): Promise<CalendarEvent[]> => {
+    return apiRequest(`/calendar/range?start=${start}&end=${end}`, 'GET', undefined, false);
+  },
+
+  createEvent: async (event: Partial<CalendarEvent>): Promise<CalendarEvent> => {
+    return apiRequest('/calendar', 'POST', event, true);
+  },
+
+  updateEvent: async (id: number, event: Partial<CalendarEvent>): Promise<CalendarEvent> => {
+    return apiRequest(`/calendar/${id}`, 'PUT', event, true);
+  },
+
+  deleteEvent: async (id: number): Promise<void> => {
+    return apiRequest(`/calendar/${id}`, 'DELETE', undefined, true);
+  },
+};
+
 export default {
   authApi,
   chatApi,
   userApi,
+  calendarApi,
   getAuthToken,
   setAuthToken,
   removeAuthToken,

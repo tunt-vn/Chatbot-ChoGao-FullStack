@@ -13,10 +13,11 @@ import {
   IconButton,
 } from '@mui/material'
 import { Visibility, VisibilityOff } from '@mui/icons-material'
-import { authApi } from '../services/api'
+import { useAuth } from '../contexts/AuthContext'
 
 export default function Login() {
   const navigate = useNavigate()
+  const { login } = useAuth()
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -66,20 +67,23 @@ export default function Login() {
     setError(null)
 
     try {
-      await authApi.login(formData.email, formData.password)
+      // Sử dụng login từ AuthContext để cập nhật user state
+      await login(formData.email, formData.password)
       setSuccess(true)
       
-      // Redirect to home after successful login
+      // Redirect to chat page after successful login
       setTimeout(() => {
-        navigate('/')
-      }, 1500)
+        navigate('/chat')
+      }, 1000)
     } catch (err: any) {
       const errorMessage = err.message || 'Đăng nhập thất bại'
       // Check if it's a verification error
       if (errorMessage.includes('401') || errorMessage.includes('chưa được xác thực')) {
         setError('Tài khoản chưa được xác thực. Vui lòng kiểm tra email để xác thực tài khoản.')
+      } else if (errorMessage.includes('Tài khoản không tồn tại')) {
+        setError('Email hoặc mật khẩu không đúng.')
       } else {
-        setError(errorMessage)
+        setError('Đăng nhập thất bại. Vui lòng kiểm tra lại email và mật khẩu.')
       }
     } finally {
       setLoading(false)

@@ -1,0 +1,7 @@
+firebase-admin==6.4.0
+google-adk==1.18.0
+google-cloud-storage>=3.0.0
+google-cloud-aiplatform>=1.125.0
+python-dotenv==1.0.1
+fastapi
+uvicorn

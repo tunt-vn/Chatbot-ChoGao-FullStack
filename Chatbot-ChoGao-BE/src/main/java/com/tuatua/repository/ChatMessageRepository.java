@@ -9,10 +9,12 @@ import java.util.List;
 
 @Repository
 public interface ChatMessageRepository extends JpaRepository<ChatMessage, Long> {
-
-    // Tìm tất cả tin nhắn của một student, sắp xếp theo thời gian mới nhất trước
+    
+    List<ChatMessage> findByUserOrderByTimestampAsc(User user);
+    
+    List<ChatMessage> findByUserIdOrderByTimestampAsc(Long userId);
+    
     List<ChatMessage> findByUserOrderByTimestampDesc(User user);
-
-    // (Tùy chọn) Tìm tin nhắn theo student và sessionId nếu bạn thêm sessionId vào entity
-    // List<ChatMessage> findByStudentAndSessionIdOrderByTimestampAsc(Student student, String sessionId);
+    
+    List<ChatMessage> findByUserIdOrderByTimestampDesc(Long userId);
 }
