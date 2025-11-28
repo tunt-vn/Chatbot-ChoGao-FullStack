@@ -20,7 +20,7 @@ public class ChatMessage {
     private Long id;
 
     @ManyToOne(fetch = FetchType.LAZY) // Liên kết Many-to-One với Student
-    @JoinColumn(name = "student_id", nullable = false)
+    @JoinColumn(name = "user_id", nullable = false)
     private User user;
 
     @Enumerated(EnumType.STRING)

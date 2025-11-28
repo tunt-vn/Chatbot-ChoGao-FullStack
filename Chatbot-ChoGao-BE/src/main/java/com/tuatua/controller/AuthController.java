@@ -161,8 +161,8 @@ public class AuthController {
     @PostMapping("/login")
     public ResponseEntity<?> authenticateUser(@RequestBody LoginRequest loginRequest) {
         Optional<User> studentOpt = userService.findByEmail(loginRequest.getEmail());
-        if (studentOpt.isEmpty()) { // || !studentOpt.get().isEnabled()) {
-            return ResponseEntity.status(401).body("Tài khoản không tồn tại."); // hoặc chưa được xác thực.");
+        if (studentOpt.isEmpty() || !studentOpt.get().isEnabled()) {
+            return ResponseEntity.status(401).body("Tài khoản không tồn tại hoặc chưa được xác thực.");
         }
 
         Authentication authentication = authenticationManager.authenticate(

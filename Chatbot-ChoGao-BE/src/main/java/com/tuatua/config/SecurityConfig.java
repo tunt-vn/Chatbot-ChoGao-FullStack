@@ -14,8 +14,6 @@ import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfigurationSource;
 
-import static org.springframework.security.web.util.matcher.AntPathRequestMatcher.antMatcher;
-
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -41,17 +39,20 @@ public class SecurityConfig {
                 .csrf(csrf -> csrf.disable())
                 .securityMatcher("/api/**")
                 .authorizeHttpRequests(auth -> auth
-                        .requestMatchers(antMatcher("/api/auth/**")).permitAll() // Endpoint xác thực -> public
+                        .requestMatchers("/api/auth/**").permitAll() // Endpoint xác thực -> public
 
                         // --- VÍ DỤ PHÂN QUYỀN ---
                         // Chỉ ADMIN có thể truy cập
-                        .requestMatchers(antMatcher("/api/admin/**")).hasRole("ADMIN")
+                        .requestMatchers("/api/admin/**").hasRole("ADMIN")
 
                         // Cả ADMIN và STAFF đều có thể truy cập
-                        .requestMatchers(antMatcher("/api/staff/**")).hasAnyRole("ADMIN", "STAFF")
+                        .requestMatchers("/api/staff/**").hasAnyRole("ADMIN", "STAFF")
+
+                        // CHỈ ADMIN MỚI ĐƯỢC VÀO CÁC API NÀY
+                        .requestMatchers("/api/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
                         // Tất cả người dùng đã xác thực (MEMBER, STAFF, ADMIN)
-                        .requestMatchers(antMatcher("/api/chat/**")).authenticated()
+                        .requestMatchers("/api/chat/**").authenticated()
                         // --- KẾT THÚC VÍ DỤ ---
 
                         .anyRequest().authenticated() // Mọi endpoint /api/** khác -> cần xác thực

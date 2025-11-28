@@ -6,15 +6,13 @@ import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
-@NoArgsConstructor
 @AllArgsConstructor
-public class MultiAgentRequest {
+@NoArgsConstructor
+public class AiAgentRequest {
+
     @JsonProperty("message")
     private String message;
-    
+
     @JsonProperty("user_id")
     private String userId;
-    
-    @JsonProperty("session_id")
-    private String sessionId;
 }
