@@ -1,6 +1,7 @@
 package com.tuatua.controller;
 
 import com.tuatua.dto.ChatRequest;
+import com.tuatua.dto.ChatResponse;
 import com.tuatua.entity.ChatMessage;
 import com.tuatua.service.ChatService;
 import lombok.RequiredArgsConstructor;
@@ -21,16 +22,17 @@ public class ChatController {
      * Endpoint gửi tin nhắn: Gọi tới Google ADK AI Agent
      */
     @PostMapping
-    public ResponseEntity<?> chatWithBot(@RequestBody ChatRequest chatRequest, Authentication authentication) {
+    public ResponseEntity<ChatResponse> chatWithBot(@RequestBody ChatRequest chatRequest, Authentication authentication) {
         String userEmail = authentication.getName();
 
         try {
             // Logic xử lý đã được chuyển hết vào Service
             String botResponse = chatService.processUserMessage(userEmail, chatRequest);
-            return ResponseEntity.ok(botResponse);
+            return ResponseEntity.ok(new ChatResponse(true, botResponse));
         } catch (Exception e) {
             e.printStackTrace();
-            return ResponseEntity.internalServerError().body("Lỗi khi xử lý tin nhắn: " + e.getMessage());
+            return ResponseEntity.internalServerError()
+                .body(new ChatResponse(false, "Lỗi khi xử lý tin nhắn: " + e.getMessage()));
         }
     }
 

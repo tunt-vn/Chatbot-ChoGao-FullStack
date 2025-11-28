@@ -21,6 +21,8 @@ import SchoolIcon from '@mui/icons-material/esm/School'
 import ChevronLeftIcon from '@mui/icons-material/esm/ChevronLeft'
 import ChevronRightIcon from '@mui/icons-material/esm/ChevronRight'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
 interface CalendarEvent {
   id: number
   title: string
@@ -62,12 +64,16 @@ export default function Calendar() {
   const fetchEvents = async () => {
     try {
       setLoading(true)
-      const response = await fetch('http://localhost:8080/api/calendar/upcoming')
+      setError(null)
+      const response = await fetch(`${API_BASE_URL}/calendar/upcoming`)
       if (!response.ok) throw new Error('Failed to fetch events')
       const data = await response.json()
-      setEvents(data)
+      setEvents(data || [])
     } catch (err) {
-      setError('Không thể tải lịch. Vui lòng thử lại sau.')
+      console.error('Calendar fetch error:', err)
+      // Không hiển thị lỗi nếu chỉ là chưa có sự kiện
+      setEvents([])
+      // setError('Không thể tải lịch. Vui lòng thử lại sau.')
       console.error(err)
     } finally {
       setLoading(false)
