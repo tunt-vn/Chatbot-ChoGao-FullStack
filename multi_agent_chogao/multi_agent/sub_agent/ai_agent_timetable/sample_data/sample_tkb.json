@@ -6,22 +6,22 @@
       "day": "Thứ 2",
       "schedule": [
         {
-          "tiết": 1,
-          "môn": "Toán",
-          "phòng": "A101",
-          "gv": "Nguyễn Văn A"
+          "period": 1,
+          "subject": "Toán",
+          "room": "A101",
+          "teacher": "Nguyễn Văn A"
         },
         {
-          "tiết": 2,
-          "môn": "Văn",
-          "phòng": "A102",
-          "gv": "Trần Thị B"
+          "period": 2,
+          "subject": "Văn",
+          "room": "A102",
+          "teacher": "Trần Thị B"
         },
         {
-          "tiết": 3,
-          "môn": "Anh",
-          "phòng": "A103",
-          "gv": "Lê Văn C"
+          "period": 3,
+          "subject": "Anh",
+          "room": "A103",
+          "teacher": "Lê Văn C"
         }
       ]
     },
@@ -31,16 +31,16 @@
       "day": "Thứ 3",
       "schedule": [
         {
-          "tiết": 1,
-          "môn": "Lý",
-          "phòng": "A104",
-          "gv": "Phạm D"
+          "period": 1,
+          "subject": "Lý",
+          "room": "A104",
+          "teacher": "Phạm D"
         },
         {
-          "tiết": 2,
-          "môn": "Hóa",
-          "phòng": "A105",
-          "gv": "Đỗ E"
+          "period": 2,
+          "subject": "Hóa",
+          "room": "A105",
+          "teacher": "Đỗ E"
         }
       ]
     }
@@ -52,16 +52,16 @@
       "day": "Thứ 2",
       "teaching": [
         {
-          "tiết": 1,
-          "lớp": "10A1",
-          "môn": "Toán",
-          "phòng": "A101"
+          "period": 1,
+          "class": "10A1",
+          "subject": "Toán",
+          "room": "A101"
         },
         {
-          "tiết": 4,
-          "lớp": "11A3",
-          "môn": "Toán",
-          "phòng": "B201"
+          "period": 4,
+          "class": "11A3",
+          "subject": "Toán",
+          "room": "B201"
         }
       ]
     }

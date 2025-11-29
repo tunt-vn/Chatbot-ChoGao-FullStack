@@ -34,3 +34,6 @@ build/
 
 # Environment variables
 .env
+
+# Google Cloud Service Account Keys
+Chatbot-ChoGao-BE/src/main/resources/serviceAccountKey.json
