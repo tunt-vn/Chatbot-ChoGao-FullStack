@@ -1,107 +1,117 @@
 package com.tuatua.service;
 
-import com.fasterxml.jackson.databind.JsonNode;
 import com.tuatua.entity.User;
 import com.tuatua.repository.UserRepository;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.core.env.Environment;
+import lombok.RequiredArgsConstructor;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.util.LinkedMultiValueMap;
 import org.springframework.util.MultiValueMap;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.Map;
 import java.util.Optional;
 
 @Service
+@RequiredArgsConstructor
 public class GoogleAuthService {
 
-    @Autowired
-    private Environment env; // Để đọc cấu hình từ application.properties
-
-    @Autowired
-    private UserRepository userRepository;
-
+    private final UserRepository userRepository;
     private final RestTemplate restTemplate = new RestTemplate();
 
-    private User processUserInfo(JsonNode userInfo) {
-        String email = userInfo.get("email").asText();
+    @Value("${spring.security.oauth2.client.registration.google.client-id}")
+    private String clientId;
 
-        // Tìm kiếm người dùng trong DB bằng email
-        Optional<User> existingStudentOpt = userRepository.findByEmail(email);
+    @Value("${spring.security.oauth2.client.registration.google.client-secret}")
+    private String clientSecret;
 
-        User user;
-        if (existingStudentOpt.isPresent()) {
-            // Nếu người dùng đã tồn tại -> Cập nhật thông tin và trả về
-            user = existingStudentOpt.get();
-            user.setName(userInfo.get("name").asText());
-        } else {
-            // Nếu người dùng chưa tồn tại -> Tạo mới
-            user = new User();
-            user.setEmail(email);
-            user.setGoogleId(userInfo.get("sub").asText()); // 'sub' là ID duy nhất của người dùng Google
-            user.setName(userInfo.get("name").asText());
+    @Value("${app.google.redirect-uri:http://localhost:5173/auth/google/callback}")
+    private String redirectUri;
+
+    public User processUserLogin(String authorizationCode) {
+        // 1. Exchange authorization code for access token
+        String accessToken = exchangeCodeForToken(authorizationCode);
+        
+        // 2. Get user info from Google
+        Map<String, Object> userInfo = getUserInfo(accessToken);
+        
+        // 3. Find or create user
+        String email = (String) userInfo.get("email");
+        String name = (String) userInfo.get("name");
+        String picture = (String) userInfo.get("picture");
+        String googleId = (String) userInfo.get("sub");
+        
+        Optional<User> existingUser = userRepository.findByEmail(email);
+        
+        if (existingUser.isPresent()) {
+            User user = existingUser.get();
+            // Update user info from Google if needed
+            if (user.getProvider() == User.AuthProvider.GOOGLE) {
+                user.setName(name);
+                user.setAvatarUrl(picture);
+                return userRepository.save(user);
+            }
+            return user;
         }
-
-        // Lưu người dùng (dù là cập nhật hay tạo mới) vào DB và trả về
-        return userRepository.save(user);
+        
+        // Create new user
+        User newUser = new User();
+        newUser.setEmail(email);
+        newUser.setName(name);
+        newUser.setAvatarUrl(picture);
+        newUser.setProvider(User.AuthProvider.GOOGLE);
+        newUser.setProviderId(googleId);
+        newUser.setRole(User.Role.MEMBER);
+        newUser.setEnabled(true); // Google users are auto-verified
+        
+        return userRepository.save(newUser);
     }
 
-
-    public User processUserLogin(String code) {
-        // 1. Dùng code để đổi lấy access token
-        String accessToken = getAccessToken(code);
-
-        // 2. Dùng access token để lấy thông tin người dùng từ Google
-        HttpHeaders headers = new HttpHeaders();
-        headers.setBearerAuth(accessToken);
-        HttpEntity<String> entity = new HttpEntity<>("", headers);
-
-        ResponseEntity<JsonNode> response = restTemplate.exchange(
-                "https://www.googleapis.com/oauth2/v3/userinfo",
-                HttpMethod.GET,
-                entity,
-                JsonNode.class
-        );
-
-        JsonNode userInfo = response.getBody();
-
-        if (userInfo == null) {
-            throw new RuntimeException("Could not get user info from Google");
-        }
-
-        // 3. Xử lý thông tin người dùng: Tìm hoặc Tạo mới (Find or Create)
-        return processUserInfo(userInfo);
-    }
-
-    private String getAccessToken(String code) {
-        String clientId = env.getProperty("spring.security.oauth2.client.registration.google.client-id");
-        String clientSecret = env.getProperty("spring.security.oauth2.client.registration.google.client-secret");
-        String redirectUri = "http://localhost:8080/login/oauth2/code/google"; // Phải khớp với URI đã đăng ký
-
-        MultiValueMap<String, String> params = new LinkedMultiValueMap<>();
-        params.add("code", code);
-        params.add("client_id", clientId);
-        params.add("client_secret", clientSecret);
-        params.add("redirect_uri", redirectUri);
-        params.add("grant_type", "authorization_code");
-
+    private String exchangeCodeForToken(String code) {
+        String tokenUrl = "https://oauth2.googleapis.com/token";
+        
         HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_FORM_URLENCODED);
-
-        HttpEntity<MultiValueMap<String, String>> requestEntity = new HttpEntity<>(params, headers);
-
-        ResponseEntity<JsonNode> response = restTemplate.postForEntity(
-                "https://oauth2.googleapis.com/token",
-                requestEntity,
-                JsonNode.class
-        );
-
-        JsonNode responseBody = response.getBody();
-        if (responseBody != null && responseBody.has("access_token")) {
-            return responseBody.get("access_token").asText();
+        
+        MultiValueMap<String, String> body = new LinkedMultiValueMap<>();
+        body.add("code", code);
+        body.add("client_id", clientId);
+        body.add("client_secret", clientSecret);
+        body.add("redirect_uri", redirectUri);
+        body.add("grant_type", "authorization_code");
+        
+        HttpEntity<MultiValueMap<String, String>> request = new HttpEntity<>(body, headers);
+        
+        ResponseEntity<Map> response = restTemplate.postForEntity(tokenUrl, request, Map.class);
+        
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return (String) response.getBody().get("access_token");
         }
+        
+        throw new RuntimeException("Failed to exchange authorization code for token");
+    }
 
-        throw new RuntimeException("Could not get access token from Google");
+    @SuppressWarnings("unchecked")
+    private Map<String, Object> getUserInfo(String accessToken) {
+        String userInfoUrl = "https://www.googleapis.com/oauth2/v3/userinfo";
+        
+        HttpHeaders headers = new HttpHeaders();
+        headers.setBearerAuth(accessToken);
+        
+        HttpEntity<Void> request = new HttpEntity<>(headers);
+        
+        ResponseEntity<Map> response = restTemplate.exchange(
+                userInfoUrl, 
+                HttpMethod.GET, 
+                request, 
+                Map.class
+        );
+        
+        if (response.getStatusCode() == HttpStatus.OK && response.getBody() != null) {
+            return response.getBody();
+        }
+        
+        throw new RuntimeException("Failed to get user info from Google");
     }
 }

@@ -1,0 +1,12 @@
+[
+  {
+    "id": "10A1_Thứ 2",
+    "class": "10A1",
+    "day": "Thứ 2",
+    "schedule": [
+      {"period": 1, "subject": "Toán", "room": "P201", "teacher": "Nguyễn Văn A"},
+      {"period": 2, "subject": "Văn", "room": "P202", "teacher": "Trần Thị B"},
+      {"period": 3, "subject": "Hóa", "room": "P203", "teacher": "Phạm Thị D"}
+    ]
+  }
+]

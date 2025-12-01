@@ -77,7 +77,7 @@ export default function ChatWindow() {
       const botMessage: Message = {
         id: `${Date.now()}-assistant`,
         from: 'assistant',
-        text: response.data || response.message || 'Xin lỗi, tôi không thể xử lý yêu cầu này.',
+        text: response.message || 'Xin lỗi, tôi không thể xử lý yêu cầu này.',
         timestamp: new Date().toISOString()
       }
       setMessages((m) => [...m, botMessage])

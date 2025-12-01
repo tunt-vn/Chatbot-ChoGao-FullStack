@@ -1,0 +1,18 @@
+[
+  {
+    "id": "Nguyễn Văn A_Thứ 2",
+    "teacher": "Nguyễn Văn A",
+    "day": "Thứ 2",
+    "teaching": [
+      {"class": "10A1", "subject": "Toán", "period": 1, "room": "P201"}
+    ]
+  },
+  {
+    "id": "Trần Thị B_Thứ 2",
+    "teacher": "Trần Thị B",
+    "day": "Thứ 2",
+    "teaching": [
+      {"class": "10A1", "subject": "Văn", "period": 2, "room": "P202"}
+    ]
+  }
+]

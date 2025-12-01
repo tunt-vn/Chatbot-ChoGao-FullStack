@@ -11,6 +11,8 @@ import {
 } from '@mui/material'
 import { CheckCircle, Error as ErrorIcon } from '@mui/icons-material'
 
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8080/api';
+
 export default function VerifyEmail() {
   const [searchParams] = useSearchParams()
   const navigate = useNavigate()
@@ -30,20 +32,22 @@ export default function VerifyEmail() {
 
       try {
         const response = await fetch(
-          `http://localhost:8080/api/auth/verify-mail?token=${token}`
+          `${API_BASE_URL}/auth/verify-mail?token=${token}`
         )
 
-        if (response.ok) {
+        const data = await response.json()
+        
+        if (response.ok && data.success) {
           setSuccess(true)
           // Redirect to login after 3 seconds
           setTimeout(() => {
             navigate('/login?verified=true')
           }, 3000)
         } else {
-          const errorText = await response.text()
-          setError(errorText || 'Xác thực email thất bại')
+          setError(data.message || 'Xác thực email thất bại')
         }
       } catch (err: any) {
+        console.error('Verify error:', err)
         setError(err.message || 'Lỗi khi xác thực email')
       } finally {
         setLoading(false)

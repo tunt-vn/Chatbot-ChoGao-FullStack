@@ -1,0 +1,69 @@
+{
+  "timetables_by_class": [
+    {
+      "id": "10A1_Thứ 2",
+      "class_name": "10A1",
+      "day": "Thứ 2",
+      "schedule": [
+        {
+          "tiết": 1,
+          "môn": "Toán",
+          "phòng": "A101",
+          "gv": "Nguyễn Văn A"
+        },
+        {
+          "tiết": 2,
+          "môn": "Văn",
+          "phòng": "A102",
+          "gv": "Trần Thị B"
+        },
+        {
+          "tiết": 3,
+          "môn": "Anh",
+          "phòng": "A103",
+          "gv": "Lê Văn C"
+        }
+      ]
+    },
+    {
+      "id": "10A1_Thứ 3",
+      "class_name": "10A1",
+      "day": "Thứ 3",
+      "schedule": [
+        {
+          "tiết": 1,
+          "môn": "Lý",
+          "phòng": "A104",
+          "gv": "Phạm D"
+        },
+        {
+          "tiết": 2,
+          "môn": "Hóa",
+          "phòng": "A105",
+          "gv": "Đỗ E"
+        }
+      ]
+    }
+  ],
+  "timetables_by_teacher": [
+    {
+      "id": "Nguyễn Văn A_Thứ 2",
+      "teacher_name": "Nguyễn Văn A",
+      "day": "Thứ 2",
+      "teaching": [
+        {
+          "tiết": 1,
+          "lớp": "10A1",
+          "môn": "Toán",
+          "phòng": "A101"
+        },
+        {
+          "tiết": 4,
+          "lớp": "11A3",
+          "môn": "Toán",
+          "phòng": "B201"
+        }
+      ]
+    }
+  ]
+}
